@@ -12,11 +12,16 @@ import { formatDate } from '../utils/time'
 import styles from './StaffQueueScreen.module.css'
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Statuses' },
-  { value: 'pending', label: 'Pending Only' },
+  { value: '', label: 'All' },
+  { value: 'pending', label: 'Pending' },
   { value: 'answered', label: 'Answered' },
   { value: 'acknowledged', label: 'Acknowledged' },
   { value: 'withdrawn', label: 'Withdrawn' },
+]
+
+const SCOPE_OPTIONS = [
+  { value: 'all', label: 'All requests' },
+  { value: 'mine', label: 'My requests' },
 ]
 
 export function StaffQueueScreen() {
@@ -139,16 +144,25 @@ export function StaffQueueScreen() {
     })
   }
 
+  function handleClearFilters() {
+    setStatusFilter('')
+    setDocTypeFilter('')
+    setScopeFilter('all')
+    setSearchQuery('')
+  }
+
+  const hasActiveFilters = Boolean(statusFilter || docTypeFilter || scopeFilter !== 'all' || searchQuery)
+
   return (
     <DocDeskLayout activeItem="queue">
       <div className={styles.container} data-testid="docdesk-staff-queue-screen">
         <div className={styles.header}>
           <Stack gap={1}>
             <Text as="h1" size="2xl" weight="bold">
-              Student Affairs Request Queue
+              Document requests
             </Text>
             <Text tone="textMuted">
-              Review incoming requests, set turnaround targets, and issue official resolutions.
+              Review and process document requests from students, faculty, and office staff.
             </Text>
           </Stack>
 
@@ -161,61 +175,30 @@ export function StaffQueueScreen() {
             >
               ↻ Refresh
             </Button>
-
-            {selectedIds.size > 0 && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleNavigateBulk}
-                data-testid="bulk-tat-button"
-              >
-                Set Bulk TAT ({selectedIds.size})
-              </Button>
-            )}
           </div>
         </div>
 
-        {/* Glass Filter Panel */}
+        {/* Filter Requests Panel */}
         <div className={`${glass.panel} ${glass.tintBlue} ${styles.filtersPanel}`}>
-          {/* Status Pills */}
-          <div className={styles.statusPills}>
-            {STATUS_OPTIONS.map((opt) => {
-              const isActive = statusFilter === opt.value
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`${styles.statusPill} ${isActive ? styles.statusPillActive : ''}`}
-                  onClick={() => setStatusFilter(opt.value)}
-                >
-                  {opt.label}
-                </button>
-              )
-            })}
+          <div className={styles.filterHeader}>
+            <h2 className={styles.filterHeading}>Filter requests</h2>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                data-testid="clear-filters-button"
+              >
+                Clear filters
+              </Button>
+            )}
           </div>
 
           <div className={styles.filterControls}>
-            {/* Scope Selector */}
-            <div className={styles.scopeSelector}>
-              <button
-                type="button"
-                className={`${styles.scopeOption} ${scopeFilter === 'all' ? styles.scopeOptionActive : ''}`}
-                onClick={() => setScopeFilter('all')}
-              >
-                All Requests
-              </button>
-              <button
-                type="button"
-                className={`${styles.scopeOption} ${scopeFilter === 'mine' ? styles.scopeOptionActive : ''}`}
-                onClick={() => setScopeFilter('mine')}
-              >
-                My Queue
-              </button>
-            </div>
-
-            <div style={{ minWidth: 160, display: 'none' }}>
+            {/* Status Dropdown */}
+            <div style={{ minWidth: 160, flex: 1 }}>
               <SelectField
-                label="Status Filter"
+                label="Status"
                 value={statusFilter}
                 options={STATUS_OPTIONS}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -223,9 +206,10 @@ export function StaffQueueScreen() {
               />
             </div>
 
-            <div style={{ minWidth: 200, flex: 1 }}>
+            {/* Document Type Dropdown */}
+            <div style={{ minWidth: 200, flex: 1.2 }}>
               <SelectField
-                label="Document Type"
+                label="Document type"
                 value={docTypeFilter}
                 options={typeOptions}
                 onChange={(e) => setDocTypeFilter(e.target.value)}
@@ -233,9 +217,21 @@ export function StaffQueueScreen() {
               />
             </div>
 
-            <div style={{ minWidth: 220, flex: 1.2 }}>
+            {/* Request Scope Dropdown */}
+            <div style={{ minWidth: 180, flex: 1 }}>
+              <SelectField
+                label="Request scope"
+                value={scopeFilter}
+                options={SCOPE_OPTIONS}
+                onChange={(e) => setScopeFilter(e.target.value as 'all' | 'mine')}
+                data-testid="queue-scope-filter"
+              />
+            </div>
+
+            {/* Search Input */}
+            <div style={{ minWidth: 200, flex: 1.2 }}>
               <TextField
-                label="Search Requests"
+                label="Search requests"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ID, requester, note..."
@@ -243,15 +239,65 @@ export function StaffQueueScreen() {
             </div>
           </div>
 
+          {/* Active Filter Chips */}
+          {hasActiveFilters && (
+            <div className={styles.filterChips}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Active filters:</span>
+              {statusFilter && (
+                <button
+                  type="button"
+                  className={styles.filterChip}
+                  onClick={() => setStatusFilter('')}
+                >
+                  Status: {STATUS_OPTIONS.find((s) => s.value === statusFilter)?.label} ✕
+                </button>
+              )}
+              {docTypeFilter && (
+                <button
+                  type="button"
+                  className={styles.filterChip}
+                  onClick={() => setDocTypeFilter('')}
+                >
+                  Type: {docTypes.find((d) => d.doc_type_id === docTypeFilter)?.name ?? docTypeFilter} ✕
+                </button>
+              )}
+              {scopeFilter !== 'all' && (
+                <button
+                  type="button"
+                  className={styles.filterChip}
+                  onClick={() => setScopeFilter('all')}
+                >
+                  Scope: My requests ✕
+                </button>
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  className={styles.filterChip}
+                  onClick={() => setSearchQuery('')}
+                >
+                  Search: &ldquo;{searchQuery}&rdquo; ✕
+                </button>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text size="xs" tone="textMuted">
               Loaded: <strong>{filteredItems.length}</strong> records
               {selectedIds.size > 0 && ` · ${selectedIds.size} pending selected`}
             </Text>
+            <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic' }}>
+              My requests shows only requests you submitted yourself.
+            </Text>
           </div>
         </div>
 
         {error && <Alert tone="danger">{error}</Alert>}
+
+        <p className={styles.tableNotice}>
+          Choose View to open a request and process it. Pending requests can also be selected for bulk TAT.
+        </p>
 
         {loading ? (
           <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
@@ -271,7 +317,7 @@ export function StaffQueueScreen() {
             {/* Desktop Table */}
             <div className={`${glass.panel} ${glass.tintBlue} ${styles.desktopOnly}`}>
               <div className={styles.tableWrapper}>
-                <table className={styles.table} aria-label="Student Affairs Queue">
+                <table className={styles.table} aria-label="Document requests table">
                   <thead>
                     <tr>
                       <th style={{ width: 40 }}>
@@ -284,13 +330,10 @@ export function StaffQueueScreen() {
                           title="Select all pending records"
                         />
                       </th>
-                      <th>ID</th>
+                      <th>Request ID</th>
                       <th>Requester</th>
-                      <th>Role / Dept</th>
-                      <th>Document Type</th>
-                      <th>Submitted</th>
-                      <th>Target (TAT)</th>
-                      <th>Indicators</th>
+                      <th>Document type</th>
+                      <th>Date</th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -313,6 +356,7 @@ export function StaffQueueScreen() {
                               disabled={!isPending}
                               onChange={() => toggleSelect(r.request_id)}
                               aria-label={`Select ${r.request_id}`}
+                              title={!isPending ? 'Only pending requests can be selected.' : `Select ${r.request_id}`}
                             />
                           </td>
                           <td>
@@ -331,12 +375,6 @@ export function StaffQueueScreen() {
                             </Stack>
                           </td>
                           <td>
-                            <Text size="xs">
-                              {r.requested_by_role}
-                              {r.requested_by_dept ? ` • ${r.requested_by_dept}` : ''}
-                            </Text>
-                          </td>
-                          <td>
                             <Text size="sm">{r.doc_type_name ?? r.doc_type_id}</Text>
                           </td>
                           <td>
@@ -345,22 +383,12 @@ export function StaffQueueScreen() {
                             </Text>
                           </td>
                           <td>
-                            <TATBadge tat={r.tat} />
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                              {r.document && <span title="Answer document attached">📎 Doc</span>}
-                              {r.filled_form && <span title="Filled form returned by requester">📝 Form</span>}
-                              {!r.document && !r.filled_form && <Text size="xs" tone="textMuted">—</Text>}
-                            </div>
-                          </td>
-                          <td>
                             <StatusBadge status={r.status} />
                           </td>
                           <td>
                             <Link to={`/tracks/docdesk/staff/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
                               <Button variant="secondary" size="sm" data-testid={`inspect-${r.request_id}`}>
-                                Process
+                                View
                               </Button>
                             </Link>
                           </td>
@@ -392,6 +420,7 @@ export function StaffQueueScreen() {
                           disabled={!isPending}
                           onChange={() => toggleSelect(r.request_id)}
                           aria-label={`Select ${r.request_id}`}
+                          title={!isPending ? 'Only pending requests can be selected.' : `Select ${r.request_id}`}
                         />
                         <Text size="xs" weight="bold">#{r.request_id}</Text>
                       </div>
@@ -410,7 +439,7 @@ export function StaffQueueScreen() {
                       <TATBadge tat={r.tat} />
                       <Link to={`/tracks/docdesk/staff/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
                         <Button variant="secondary" size="sm" data-testid={`inspect-${r.request_id}`}>
-                          Process
+                          View
                         </Button>
                       </Link>
                     </div>
@@ -418,6 +447,30 @@ export function StaffQueueScreen() {
                 )
               })}
             </div>
+
+            {/* Floating Bulk Action Bar */}
+            {selectedIds.size > 0 && (
+              <div className={styles.floatingActionBar}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  {selectedIds.size} selected
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSelectedIds(new Set())}
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleNavigateBulk}
+                  data-testid="bulk-tat-button"
+                >
+                  Set turnaround time
+                </Button>
+              </div>
+            )}
 
             {/* Pagination Controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-2)' }}>

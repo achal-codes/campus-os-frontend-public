@@ -22,30 +22,33 @@ export function DocDeskTopbar() {
   // Determine navigation items according to user role
   let navItems: Array<{ label: string, to: string, end?: boolean, testId: string }> = []
   let roleLabel = 'Requester'
+  let roleTitle = 'DocDesk Requester'
   let roleBadgeClass = styles.roleBadge
 
   if (isAdmin) {
-    roleLabel = 'Admin (Audit)'
+    roleTitle = 'DocDesk Admin'
+    roleLabel = 'Admin'
     roleBadgeClass = `${styles.roleBadge} ${styles.roleBadgeAdmin}`
     navItems = [
       { label: 'Overview', to: '/tracks/docdesk/admin', end: true, testId: 'nav-docdesk-admin' },
       { label: 'Request Audit', to: '/tracks/docdesk/admin', testId: 'nav-docdesk-audit' },
     ]
   } else if (isStaff) {
+    roleTitle = 'DocDesk Student Affairs'
     roleLabel = 'Student Affairs'
     roleBadgeClass = `${styles.roleBadge} ${styles.roleBadgeStaff}`
     navItems = [
       { label: 'Dashboard', to: '/tracks/docdesk/staff/dashboard', testId: 'nav-docdesk-staff-dash' },
       { label: 'Requests', to: '/tracks/docdesk/staff', end: true, testId: 'nav-docdesk-staff' },
-      { label: 'Bulk TAT', to: '/tracks/docdesk/staff/bulk-tat', testId: 'nav-docdesk-bulk-tat' },
       { label: 'Document Types', to: '/tracks/docdesk/staff/doc-types', testId: 'nav-docdesk-doctypes' },
     ]
   } else {
-    roleLabel = user?.role === 'faculty' ? 'Faculty Requester' : 'Student Requester'
+    roleTitle = 'DocDesk Requester'
+    roleLabel = user?.role === 'faculty' ? 'Faculty' : 'Student'
     navItems = [
-      { label: 'Dashboard', to: '/tracks/docdesk', end: true, testId: 'nav-docdesk-home' },
       { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
       { label: 'New Request', to: '/tracks/docdesk/new', testId: 'nav-docdesk-new' },
+      { label: 'Dashboard', to: '/tracks/docdesk', end: true, testId: 'nav-docdesk-home' },
       { label: 'Catalogue', to: '/tracks/docdesk/catalogue', testId: 'nav-docdesk-catalogue' },
     ]
   }
@@ -90,10 +93,10 @@ export function DocDeskTopbar() {
         {/* Left: Brand */}
         <Link to="/tracks/docdesk" className={styles.brandGroup} aria-label="DocDesk Home">
           <div className={styles.brandGlyph} aria-hidden="true">
-            📄
+            ◈
           </div>
           <div className={styles.brandText}>
-            <span className={styles.brandName}>DocDesk</span>
+            <span className={styles.brandName}>{roleTitle}</span>
             <span className={styles.brandContext}>CampusOS · Team 24</span>
           </div>
         </Link>
@@ -159,6 +162,7 @@ export function DocDeskTopbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-expanded={mobileOpen}
             aria-label="Open navigation menu"
+            data-testid="docdesk-menu-toggle"
           >
             ☰
           </button>

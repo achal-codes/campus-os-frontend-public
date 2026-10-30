@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '@/core/auth'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { acknowledgeRequest, downloadDocument, getRequest, withdrawRequest } from '../api/requests'
 import { DocDeskTopbar } from '../components/DocDeskTopbar'
 import { EditRequestModal } from '../components/EditRequestModal'
 import { FilledFormPanel } from '../components/FilledFormPanel'
+import { LifecycleStrip } from '../components/LifecycleStrip'
 import { RequestCommunicationPanel } from '../components/RequestCommunicationPanel'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
@@ -31,6 +32,14 @@ export function RequestDetailScreen() {
   const [downloadingDoc, setDownloadingDoc] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
   const [acknowledging, setAcknowledging] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  function handleCopyId() {
+    if (!request) return
+    navigator.clipboard.writeText(request.request_id)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const loadData = useCallback(async () => {
     if (!id) return
@@ -158,42 +167,35 @@ export function RequestDetailScreen() {
       <DocDeskTopbar />
 
       <main className={styles.container} style={{ padding: 'var(--space-6) var(--space-5)' }} data-testid="docdesk-request-detail-screen">
-        {/* Header Bar */}
+        {/* Header Bar with Breadcrumb and Title */}
         <div className={`${glassStyles.glassPanel} ${styles.headerBar}`}>
           <div className={styles.titleArea}>
+            <div className={styles.breadcrumb}>
+              <Link to="/tracks/docdesk/my-requests" className={styles.breadcrumbLink}>
+                My Requests
+              </Link>
+              <span>/</span>
+              <span>{request.request_id}</span>
+            </div>
             <div className={styles.titleRow}>
-              <h1 className={styles.title}>{request.doc_type_name ?? request.doc_type_id}</h1>
+              <h1 className={styles.title}>Request details</h1>
               <StatusBadge status={request.status} />
+              <button
+                type="button"
+                className={styles.copyBtn}
+                onClick={handleCopyId}
+                title="Copy Request ID"
+                aria-label="Copy Request ID"
+              >
+                📋 {request.request_id} {copied ? '✓ Copied' : ''}
+              </button>
             </div>
             <p className={styles.subtitle}>
-              Request #{request.request_id} • Submitted on {formatDateTime(request.created_at)}
+              Document: <strong>{request.doc_type_name ?? request.doc_type_id}</strong> • Submitted {formatDateTime(request.created_at)}
             </p>
           </div>
 
           <div className={styles.actionsGroup}>
-            {canEdit && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowEditModal(true)}
-                data-testid="edit-request-button"
-              >
-                Edit Reason
-              </Button>
-            )}
-
-            {canWithdraw && (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleWithdraw}
-                loading={withdrawing}
-                data-testid="withdraw-request-button"
-              >
-                Withdraw Request
-              </Button>
-            )}
-
             {canAcknowledge && (
               <Button
                 variant="primary"
@@ -202,96 +204,156 @@ export function RequestDetailScreen() {
                 loading={acknowledging}
                 data-testid="acknowledge-request-button"
               >
-                ✓ Acknowledge & Close
+                Acknowledge
               </Button>
             )}
           </div>
         </div>
 
+        {/* 3-Step Lifecycle Strip */}
+        <LifecycleStrip status={request.status} />
+
         {error && <Alert tone="danger">{error}</Alert>}
 
         {/* SCREEN 3: Pending Request Details */}
         {isPending && (
-          <div className={styles.twoPanelGrid}>
-            {/* Request Information Panel */}
+          <>
+            <div className={styles.twoPanelGrid}>
+              {/* Overline 1: REQUEST INFORMATION */}
+              <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+                <div className={styles.overline}>REQUEST INFORMATION</div>
+                <div className={styles.metaGrid}>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Request ID</span>
+                    <span className={styles.metaValue} style={{ fontWeight: 600 }}>{request.request_id}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Document type</span>
+                    <span className={styles.metaValue}>{request.doc_type_name ?? request.doc_type_id}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Submitted date</span>
+                    <span className={styles.metaValue}>{formatDateTime(request.created_at)}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Status</span>
+                    <span className={styles.metaValue}><StatusBadge status={request.status} /></span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className={styles.metaLabel} style={{ display: 'block', marginBottom: 6 }}>Reason</span>
+                  <div className={styles.reasonBox}>{request.reason}</div>
+                </div>
+              </div>
+
+              {/* Overline 2: TURNAROUND TIME (IF SET) */}
+              <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+                <div className={styles.overline}>TURNAROUND TIME (IF SET)</div>
+                {request.tat ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>Expected by</span>
+                      <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className={styles.metaValue} style={{ fontWeight: 600 }}>
+                          {formatDate(request.tat.expected_by)}
+                        </span>
+                        <TATBadge tat={request.tat} />
+                      </div>
+                    </div>
+                    {request.tat.note && (
+                      <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Staff note</span>
+                        <div className={styles.reasonBox} style={{ background: 'rgba(99, 102, 241, 0.04)' }}>
+                          {request.tat.note}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    <Text size="sm">No turnaround time has been assigned yet.</Text>
+                    <Text size="xs" style={{ marginTop: 6, fontStyle: 'italic' }}>
+                      TAT is optional and is set by Student Affairs while the request is pending.
+                    </Text>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Overline 3: AVAILABLE REQUESTER ACTIONS */}
             <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
-              <h2 className={styles.panelTitle}>Request Information</h2>
+              <div className={styles.overline}>AVAILABLE REQUESTER ACTIONS</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <div className={styles.actionRow}>
+                  <p className={styles.actionDesc}>Edit request: change document type and/or reason.</p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowEditModal(true)}
+                    disabled={!canEdit}
+                    data-testid="edit-request-button"
+                  >
+                    Edit Request
+                  </Button>
+                </div>
+
+                <div className={styles.actionRow}>
+                  <p className={styles.actionDesc}>Withdraw request: remove your pending request.</p>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={handleWithdraw}
+                    loading={withdrawing}
+                    disabled={!canWithdraw}
+                    data-testid="withdraw-request-button"
+                  >
+                    Withdraw
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* SCREEN 4: Answered and Acknowledged Request Details */}
+        {isAnsweredOrAck && (
+          <>
+            {/* Request Summary Card */}
+            <div className={`${glassStyles.glassPanel} ${styles.summaryCard}`}>
+              <div className={styles.overline}>REQUEST SUMMARY</div>
               <div className={styles.metaGrid}>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Request ID</span>
                   <span className={styles.metaValue} style={{ fontWeight: 600 }}>{request.request_id}</span>
                 </div>
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Document Type</span>
+                  <span className={styles.metaLabel}>Document type</span>
                   <span className={styles.metaValue}>{request.doc_type_name ?? request.doc_type_id}</span>
                 </div>
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Submitted Date</span>
+                  <span className={styles.metaLabel}>Submitted date</span>
                   <span className={styles.metaValue}>{formatDateTime(request.created_at)}</span>
                 </div>
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Current Status</span>
-                  <span className={styles.metaValue}><StatusBadge status={request.status} /></span>
+                  <span className={styles.metaLabel}>Expected by</span>
+                  <span className={styles.metaValue}>
+                    {request.tat?.expected_by ? formatDate(request.tat.expected_by) : 'Not assigned'}
+                  </span>
                 </div>
-              </div>
-
-              <div>
-                <span className={styles.metaLabel} style={{ display: 'block', marginBottom: 6 }}>Reason for Request</span>
-                <div className={styles.reasonBox}>{request.reason}</div>
               </div>
             </div>
 
-            {/* Turnaround Time Panel */}
-            <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
-              <h2 className={styles.panelTitle}>Turnaround Time (TAT)</h2>
-              {request.tat ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Target Resolution Date</span>
-                    <div style={{ marginTop: 4 }}>
-                      <TATBadge tat={request.tat} />
-                    </div>
-                  </div>
-                  {request.tat.expected_by && (
-                    <div className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Target Calendar Date</span>
-                      <span className={styles.metaValue}>{formatDate(request.tat.expected_by)}</span>
-                    </div>
-                  )}
-                  {request.tat.note && (
-                    <div className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Staff Note</span>
-                      <div className={styles.reasonBox} style={{ background: 'rgba(99, 102, 241, 0.04)' }}>
-                        {request.tat.note}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                  <Text size="sm">No turnaround time has been assigned yet.</Text>
-                  <Text size="xs" style={{ marginTop: 6 }}>
-                    Student Affairs will review your request and set an expected target date shortly.
-                  </Text>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 4: Answered and Acknowledged Request Details */}
-        {isAnsweredOrAck && (
-          <>
             <div className={styles.twoPanelGrid}>
-              {/* Left Panel: Student Affairs Response */}
+              {/* Left Panel: STUDENT AFFAIRS RESPONSE */}
               <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
-                <h2 className={styles.panelTitle}>Student Affairs Response</h2>
+                <div className={styles.overline}>STUDENT AFFAIRS RESPONSE</div>
                 {request.answer ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                     <div className={styles.metaGrid}>
                       {request.answer.answered_by_name && (
                         <div className={styles.metaItem}>
-                          <span className={styles.metaLabel}>Answered By</span>
+                          <span className={styles.metaLabel}>Answered by:</span>
                           <span className={styles.metaValue} style={{ fontWeight: 600 }}>
                             {request.answer.answered_by_name}
                           </span>
@@ -299,14 +361,14 @@ export function RequestDetailScreen() {
                       )}
                       {request.answer.answered_at && (
                         <div className={styles.metaItem}>
-                          <span className={styles.metaLabel}>Answer Timestamp</span>
+                          <span className={styles.metaLabel}>Answered at:</span>
                           <span className={styles.metaValue}>{formatDateTime(request.answer.answered_at)}</span>
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <span className={styles.metaLabel} style={{ display: 'block', marginBottom: 6 }}>Official Message</span>
+                      <span className={styles.metaLabel} style={{ display: 'block', marginBottom: 6 }}>Message:</span>
                       <div className={styles.reasonBox}>{request.answer.message}</div>
                     </div>
                   </div>
@@ -315,13 +377,13 @@ export function RequestDetailScreen() {
                 )}
               </div>
 
-              {/* Right Panel: Document from Student Affairs */}
+              {/* Right Panel: DOCUMENT FROM STAFF */}
               <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
-                <h2 className={styles.panelTitle}>Document from Student Affairs</h2>
+                <div className={styles.overline}>DOCUMENT FROM STAFF</div>
                 {request.document ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                     <div className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Attached Document File</span>
+                      <span className={styles.metaLabel}>Document file</span>
                       <span className={styles.metaValue} style={{ fontWeight: 600 }}>{request.document.filename}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                         {formatFileSize(request.document.size_bytes)} • {request.document.content_type}
@@ -337,7 +399,7 @@ export function RequestDetailScreen() {
                           loading={downloadingDoc}
                           data-testid="download-document-button"
                         >
-                          ⬇ Download Official Document
+                          Download
                         </Button>
                       </div>
                     )}
@@ -350,7 +412,7 @@ export function RequestDetailScreen() {
               </div>
             </div>
 
-            {/* Filled-Form Round Trip Panel (Visible only when appropriate) */}
+            {/* Filled-Form Round Trip Panel (Visible only when staff attached a document) */}
             {request.document && (
               <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-5)' }}>
                 <FilledFormPanel

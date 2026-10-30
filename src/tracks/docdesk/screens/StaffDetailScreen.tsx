@@ -9,6 +9,7 @@ import {
 } from '../api/requests'
 import { AnswerComposerModal } from '../components/AnswerComposerModal'
 import { DocDeskLayout } from '../components/DocDeskLayout'
+import { LifecycleStrip } from '../components/LifecycleStrip'
 import { RequestCommunicationPanel } from '../components/RequestCommunicationPanel'
 import { SetTATModal } from '../components/SetTATModal'
 import { StatusBadge } from '../components/StatusBadge'
@@ -142,19 +143,24 @@ export function StaffDetailScreen() {
     <DocDeskLayout activeItem="queue">
       <div className={styles.container} data-testid="docdesk-staff-detail-screen">
         <div>
-          <Link to="/tracks/docdesk/staff" className={styles.backLink}>
-            ← Back to Request Queue
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', marginBottom: 6 }}>
+            <Link to="/tracks/docdesk/staff" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 500 }}>
+              Requests
+            </Link>
+            <span style={{ color: 'var(--color-text-muted)' }}>/</span>
+            <span style={{ color: 'var(--color-text-muted)' }}>{request.request_id}</span>
+          </div>
+
           <div className={styles.headerBar}>
             <Stack gap={1}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
                 <Text as="h1" size="2xl" weight="bold">
-                  Process: {request.doc_type_name ?? request.doc_type_id}
+                  Process request: {request.request_id}
                 </Text>
                 <StatusBadge status={request.status} />
               </div>
               <Text size="xs" tone="textMuted">
-                Request ID: <strong>#{request.request_id}</strong> · Lifecycle: <strong>{getPresentationState()}</strong>
+                Document: <strong>{request.doc_type_name ?? request.doc_type_id}</strong> · Lifecycle: <strong>{getPresentationState()}</strong>
               </Text>
             </Stack>
 
@@ -167,7 +173,7 @@ export function StaffDetailScreen() {
                     onClick={() => setShowTATModal(true)}
                     data-testid="set-tat-button"
                   >
-                    Set TAT
+                    Save TAT
                   </Button>
                   <Button
                     variant="primary"
@@ -178,7 +184,7 @@ export function StaffDetailScreen() {
                     }}
                     data-testid="answer-request-button"
                   >
-                    Submit Official Answer
+                    Send Answer
                   </Button>
                 </>
               )}
@@ -194,7 +200,7 @@ export function StaffDetailScreen() {
                     }}
                     data-testid="edit-answer-button"
                   >
-                    Edit Answer
+                    Edit Message
                   </Button>
                   <Button
                     variant="danger"
@@ -211,6 +217,9 @@ export function StaffDetailScreen() {
           </div>
         </div>
 
+        {/* 3-Step Lifecycle Progress Strip */}
+        <LifecycleStrip status={request.status} />
+
         {error && <Alert tone="danger">{error}</Alert>}
 
         {/* 3-Panel Grid */}
@@ -218,26 +227,31 @@ export function StaffDetailScreen() {
           {/* Panel A: Requester & Request Info */}
           <div className={`${glass.panel} ${glass.tintBlue}`}>
             <Stack gap={4}>
-              <Text as="h2" size="md" weight="bold">
-                Requester Information & Notes
+              <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                REQUESTER & REQUEST
               </Text>
 
               <div className={styles.metaGrid}>
                 <div className={styles.metaItem}>
-                  <Text size="xs" tone="textMuted">Requester Name</Text>
+                  <Text size="xs" tone="textMuted">Requester</Text>
                   <Text size="sm" weight="bold">
                     {request.requested_by_name ?? request.requested_by}
                   </Text>
                 </div>
 
                 <div className={styles.metaItem}>
-                  <Text size="xs" tone="textMuted">Email Address</Text>
+                  <Text size="xs" tone="textMuted">Email</Text>
                   <Text size="sm">{request.requested_by}</Text>
                 </div>
 
                 <div className={styles.metaItem}>
-                  <Text size="xs" tone="textMuted">Institutional Role</Text>
-                  <Text size="sm">{request.requested_by_role ?? 'student'}</Text>
+                  <Text size="xs" tone="textMuted">Document</Text>
+                  <Text size="sm">{request.doc_type_name ?? request.doc_type_id}</Text>
+                </div>
+
+                <div className={styles.metaItem}>
+                  <Text size="xs" tone="textMuted">Submitted</Text>
+                  <Text size="sm">{formatDateTime(request.created_at)}</Text>
                 </div>
 
                 {request.requested_by_dept && (
@@ -246,22 +260,10 @@ export function StaffDetailScreen() {
                     <Text size="sm">{request.requested_by_dept}</Text>
                   </div>
                 )}
-
-                {request.requested_by_phone_number && (
-                  <div className={styles.metaItem}>
-                    <Text size="xs" tone="textMuted">Phone Number</Text>
-                    <Text size="sm">{request.requested_by_phone_number}</Text>
-                  </div>
-                )}
-
-                <div className={styles.metaItem}>
-                  <Text size="xs" tone="textMuted">Submitted At</Text>
-                  <Text size="sm">{formatDateTime(request.created_at)}</Text>
-                </div>
               </div>
 
               <div>
-                <Text size="xs" tone="textMuted">Requester Stated Reason</Text>
+                <Text size="xs" tone="textMuted">Reason</Text>
                 <div className={styles.reasonQuote}>
                   {request.reason}
                 </div>
@@ -297,8 +299,8 @@ export function StaffDetailScreen() {
           <div className={`${glass.panel} ${glass.tintBlue}`}>
             <Stack gap={4}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text as="h2" size="md" weight="bold">
-                  Turnaround Time SLA Target
+                <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  TURNAROUND TIME (PENDING ONLY)
                 </Text>
                 {request.status === 'pending' && (
                   <Button
@@ -306,16 +308,19 @@ export function StaffDetailScreen() {
                     size="sm"
                     onClick={() => setShowTATModal(true)}
                   >
-                    Adjust TAT
+                    Save TAT
                   </Button>
                 )}
               </div>
 
               <div className={styles.metaItem}>
-                <Text size="xs" tone="textMuted">Target Completion Date (IST)</Text>
+                <Text size="xs" tone="textMuted">Expected by (YYYY-MM-DD)</Text>
                 <div style={{ marginTop: 'var(--space-1)' }}>
                   {request.tat ? (
-                    <TATBadge tat={request.tat} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Text size="sm" weight="bold">{formatDate(request.tat.expected_by)}</Text>
+                      <TATBadge tat={request.tat} />
+                    </div>
                   ) : (
                     <Text size="sm" tone="textMuted">No turnaround target specified.</Text>
                   )}
@@ -324,7 +329,7 @@ export function StaffDetailScreen() {
 
               {request.tat?.note && (
                 <div className={styles.metaItem}>
-                  <Text size="xs" tone="textMuted">TAT Operational Note</Text>
+                  <Text size="xs" tone="textMuted">TAT note (optional)</Text>
                   <div className={styles.reasonQuote}>
                     {request.tat.note}
                   </div>
@@ -344,8 +349,8 @@ export function StaffDetailScreen() {
           <div className={`${glass.panel} ${glass.tintBlue} ${styles.fullWidthPanel}`}>
             <Stack gap={4}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-                <Text as="h2" size="md" weight="bold">
-                  Official Document Resolution & Communication
+                <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ANSWER THE REQUEST
                 </Text>
 
                 {request.status === 'answered' && (
@@ -358,7 +363,7 @@ export function StaffDetailScreen() {
                         setShowAnswerModal(true)
                       }}
                     >
-                      Edit Resolution
+                      Edit Message
                     </Button>
                     <Button
                       variant="danger"
@@ -366,7 +371,7 @@ export function StaffDetailScreen() {
                       onClick={handleWithdrawAnswer}
                       loading={withdrawingAnswer}
                     >
-                      Withdraw
+                      Withdraw Answer
                     </Button>
                   </div>
                 )}
@@ -376,7 +381,7 @@ export function StaffDetailScreen() {
                 <div style={{ padding: 'var(--space-4)', background: 'var(--color-surface-muted)', borderRadius: 'var(--radius-md)' }}>
                   <Stack gap={3}>
                     <Text size="sm">
-                      This request has not yet been answered. Prepare the required certificate or institutional document and deliver official remarks.
+                      Initial answer requires a 1-2000 character message. The document is optional. TAT can be set only while pending.
                     </Text>
                     <div>
                       <Button
@@ -387,7 +392,7 @@ export function StaffDetailScreen() {
                           setShowAnswerModal(true)
                         }}
                       >
-                        Prepare & Submit Official Answer →
+                        Send Answer →
                       </Button>
                     </div>
                   </Stack>
@@ -396,7 +401,7 @@ export function StaffDetailScreen() {
                 <Stack gap={4}>
                   {/* Staff Answer Box */}
                   <div>
-                    <Text size="xs" tone="textMuted">Official Remarks on Record</Text>
+                    <Text size="xs" tone="textMuted">Answer message *</Text>
                     <div className={styles.reasonQuote}>
                       {request.answer?.message ?? 'No remarks recorded.'}
                     </div>
@@ -433,6 +438,10 @@ export function StaffDetailScreen() {
                   ) : (
                     <Text size="xs" tone="textMuted">No document attached to this resolution.</Text>
                   )}
+
+                  <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic' }}>
+                    If withdrawing an answer, the request returns to pending.
+                  </Text>
 
                   {/* Acknowledgment Banner */}
                   {request.status === 'acknowledged' ? (

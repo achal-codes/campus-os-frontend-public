@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { listRequests } from '../api/requests'
-import { DocDeskTopbar } from '../components/DocDeskTopbar'
+import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
 import glassStyles from '../theme/glass.module.css'
@@ -12,7 +12,7 @@ import { formatDate } from '../utils/time'
 import styles from './MyRequestsScreen.module.css'
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Statuses' },
+  { value: '', label: 'All statuses' },
   { value: 'pending', label: 'Pending' },
   { value: 'answered', label: 'Answered' },
   { value: 'acknowledged', label: 'Acknowledged' },
@@ -27,6 +27,7 @@ export function MyRequestsScreen() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   // Load available document types for the filter dropdown
   useEffect(() => {
@@ -87,7 +88,6 @@ export function MyRequestsScreen() {
         cursor: nextCursor,
         limit: 25,
       })
-      // Prevent duplicate rows by request_id
       setItems((prev) => {
         const existingIds = new Set(prev.map((i) => i.request_id))
         const newUnique = res.items.filter((i) => !existingIds.has(i.request_id))
@@ -101,65 +101,122 @@ export function MyRequestsScreen() {
     }
   }
 
-  return (
-    <div className={glassStyles.glassContainer}>
-      <DocDeskTopbar />
+  function handleCopy(id: string) {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(id).catch(() => {})
+    }
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
+  }
 
-      <main className={styles.container} style={{ padding: 'var(--space-6) var(--space-5)' }} data-testid="docdesk-my-requests-screen">
+  function clearFilters() {
+    setStatusFilter('')
+    setDocTypeFilter('')
+  }
+
+  const activeDocTypeName = docTypes.find((d) => d.doc_type_id === docTypeFilter)?.name
+  const isFiltered = Boolean(statusFilter || docTypeFilter)
+
+  return (
+    <DocDeskLayout activeItem="my-requests">
+      <div className={styles.container} data-testid="docdesk-my-requests-screen">
         {/* Header */}
         <div className={styles.headerRow}>
           <div className={styles.headerText}>
-            <h1 className={styles.title}>My Requests</h1>
-            <p className={styles.subtitle}>Track your document requests and review their current status.</p>
+            <h1 className={styles.title}>My document requests</h1>
+            <p className={styles.subtitle}>Track your submitted document requests and inspect their current status.</p>
           </div>
 
           <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
-            <Button variant="primary" size="md">
-              + New Request
+            <Button variant="primary" size="md" data-testid="new-request-button">
+              New Request
             </Button>
           </Link>
         </div>
 
         {/* Filter Glass Panel */}
         <div className={`${glassStyles.glassPanel} ${styles.filterPanel}`}>
-          <div className={styles.filterGroup}>
-            <label htmlFor="filter-status" className={styles.filterLabel}>
-              Status
-            </label>
-            <select
-              id="filter-status"
-              className={glassStyles.glassSelect}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filter requests by status"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+          <h2 className={styles.filterHeading}>Filter requests</h2>
+          <div className={styles.filterControls}>
+            <div className={styles.filterGroup}>
+              <label htmlFor="filter-status" className={styles.filterLabel}>
+                Status
+              </label>
+              <select
+                id="filter-status"
+                className={glassStyles.glassSelect}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                aria-label="Filter requests by status"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.filterGroup}>
+              <label htmlFor="filter-doctype" className={styles.filterLabel}>
+                Document type
+              </label>
+              <select
+                id="filter-doctype"
+                className={glassStyles.glassSelect}
+                value={docTypeFilter}
+                onChange={(e) => setDocTypeFilter(e.target.value)}
+                aria-label="Filter requests by document type"
+              >
+                <option value="">All types</option>
+                {docTypes.map((dt) => (
+                  <option key={dt.doc_type_id} value={dt.doc_type_id}>
+                    {dt.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className={styles.filterGroup}>
-            <label htmlFor="filter-doctype" className={styles.filterLabel}>
-              Document Type
-            </label>
-            <select
-              id="filter-doctype"
-              className={glassStyles.glassSelect}
-              value={docTypeFilter}
-              onChange={(e) => setDocTypeFilter(e.target.value)}
-              aria-label="Filter requests by document type"
-            >
-              <option value="">All Document Types</option>
-              {docTypes.map((dt) => (
-                <option key={dt.doc_type_id} value={dt.doc_type_id}>
-                  {dt.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Active Filter Chips */}
+          {isFiltered && (
+            <div className={styles.filterChipsRow}>
+              <Text size="xs" tone="textMuted">Active filters:</Text>
+              {statusFilter && (
+                <span className={styles.chip}>
+                  Status: <strong>{statusFilter}</strong>
+                  <button
+                    type="button"
+                    className={styles.chipRemove}
+                    onClick={() => setStatusFilter('')}
+                    aria-label="Remove status filter"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {docTypeFilter && (
+                <span className={styles.chip}>
+                  Type: <strong>{activeDocTypeName ?? docTypeFilter}</strong>
+                  <button
+                    type="button"
+                    className={styles.chipRemove}
+                    onClick={() => setDocTypeFilter('')}
+                    aria-label="Remove document type filter"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              <button
+                type="button"
+                className={styles.clearFiltersLink}
+                onClick={clearFilters}
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Alerts & Errors */}
@@ -172,12 +229,27 @@ export function MyRequestsScreen() {
           </div>
         ) : items.length === 0 ? (
           <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
-            <Text size="md" weight="medium">
-              No matching requests found
+            <Text as="h3" size="md" weight="medium">
+              {isFiltered ? 'No requests match these filters' : 'No requests yet'}
             </Text>
             <Text size="sm" tone="textMuted" style={{ marginTop: 'var(--space-2)' }}>
-              Try adjusting your filter selection or submit a new document request.
+              {isFiltered
+                ? 'Try resetting the filters to view all your document requests.'
+                : 'You have not submitted any document requests yet.'}
             </Text>
+            <div style={{ marginTop: 'var(--space-4)' }}>
+              {isFiltered ? (
+                <Button variant="secondary" size="sm" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              ) : (
+                <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
+                  <Button variant="primary" size="sm">
+                    New Request
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         ) : (
           <>
@@ -187,9 +259,8 @@ export function MyRequestsScreen() {
                 <thead>
                   <tr>
                     <th>Request ID</th>
-                    <th>Document Type</th>
-                    <th>Submitted Date</th>
-                    <th>Target Date</th>
+                    <th>Document type</th>
+                    <th>Submitted date</th>
                     <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Action</th>
                   </tr>
@@ -198,9 +269,20 @@ export function MyRequestsScreen() {
                   {items.map((r) => (
                     <tr key={r.request_id} data-testid={`request-row-${r.request_id}`}>
                       <td>
-                        <Text size="sm" weight="bold">
-                          {r.request_id}
-                        </Text>
+                        <div className={styles.idCell}>
+                          <Text size="xs" weight="bold" style={{ fontFamily: 'monospace' }}>
+                            {r.request_id}
+                          </Text>
+                          <button
+                            type="button"
+                            className={styles.copyButton}
+                            onClick={() => handleCopy(r.request_id)}
+                            title="Copy Request ID"
+                            aria-label={`Copy request ID ${r.request_id}`}
+                          >
+                            {copiedId === r.request_id ? '✓' : '📋'}
+                          </button>
+                        </div>
                       </td>
                       <td>
                         <Text size="sm" weight="medium">
@@ -213,14 +295,14 @@ export function MyRequestsScreen() {
                         </Text>
                       </td>
                       <td>
-                        <TATBadge tat={r.tat} />
-                      </td>
-                      <td>
-                        <StatusBadge status={r.status} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <StatusBadge status={r.status} />
+                          {r.tat && <TATBadge tat={r.tat} />}
+                        </div>
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <Link to={`/tracks/docdesk/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
-                          <Button variant="secondary" size="sm">
+                          <Button variant="secondary" size="sm" data-testid={`inspect-${r.request_id}`}>
                             View
                           </Button>
                         </Link>
@@ -231,16 +313,32 @@ export function MyRequestsScreen() {
               </table>
             </div>
 
+            {/* User-facing helper text */}
+            <div className={styles.helperText}>
+              Select View to open a request's details.
+            </div>
+
             {/* Mobile Card-Based View */}
             <div className={styles.mobileCardsContainer}>
               {items.map((r) => (
                 <div key={'m-' + r.request_id} className={`${glassStyles.glassCard} ${styles.mobileCard}`}>
                   <div className={styles.mobileCardHeader}>
                     <div>
-                      <Text size="sm" weight="bold">
-                        {r.request_id}
-                      </Text>
-                      <Text size="sm" weight="medium" style={{ display: 'block', marginTop: 2 }}>
+                      <div className={styles.idCell}>
+                        <Text size="xs" weight="bold" style={{ fontFamily: 'monospace' }}>
+                          #{r.request_id}
+                        </Text>
+                        <button
+                          type="button"
+                          className={styles.copyButton}
+                          onClick={() => handleCopy(r.request_id)}
+                          title="Copy Request ID"
+                          aria-label={`Copy request ID ${r.request_id}`}
+                        >
+                          {copiedId === r.request_id ? '✓' : '📋'}
+                        </button>
+                      </div>
+                      <Text size="sm" weight="bold" style={{ display: 'block', marginTop: 4 }}>
                         {r.doc_type_name ?? r.doc_type_id}
                       </Text>
                     </div>
@@ -265,8 +363,8 @@ export function MyRequestsScreen() {
 
                   <div className={styles.mobileCardActions}>
                     <Link to={`/tracks/docdesk/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
-                      <Button variant="secondary" size="sm">
-                        View Details
+                      <Button variant="secondary" size="sm" data-testid={`inspect-${r.request_id}`}>
+                        View
                       </Button>
                     </Link>
                   </div>
@@ -294,7 +392,7 @@ export function MyRequestsScreen() {
             </div>
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </DocDeskLayout>
   )
 }

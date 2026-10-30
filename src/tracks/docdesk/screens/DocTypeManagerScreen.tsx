@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Alert, Button, Spinner, Stack, Text, TextField } from '@/ui'
+import { Alert, Button, SelectField, Spinner, Stack, Text, TextField } from '@/ui'
 import {
   createDocType,
   deleteDocType,
@@ -17,16 +17,15 @@ export function DocTypeManagerScreen() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  // Creation form state
+  // Form state
+  const [editingDocType, setEditingDocType] = useState<DocType | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [status, setStatus] = useState<'active' | 'archived'>('active')
+  const [submitting, setSubmitting] = useState(false)
 
-  // Editing state
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editDesc, setEditDesc] = useState('')
-  const [savingEdit, setSavingEdit] = useState(false)
+  // Tabs state: 'active' | 'archived'
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
 
   async function loadData() {
     setLoading(true)
@@ -59,40 +58,76 @@ export function DocTypeManagerScreen() {
     }
   }, [])
 
-  async function handleCreate(e: FormEvent) {
+  function resetForm() {
+    setEditingDocType(null)
+    setName('')
+    setDescription('')
+    setStatus('active')
+  }
+
+  function startEdit(dt: DocType) {
+    setEditingDocType(dt)
+    setName(dt.name)
+    setDescription(dt.description ?? '')
+    setStatus(dt.status)
+    setError(null)
+    setSuccess(null)
+  }
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (name.trim().length < 3 || name.trim().length > 80) {
+    const trimmedName = name.trim()
+    if (trimmedName.length < 3 || trimmedName.length > 80) {
       setError('Document type name must be between 3 and 80 characters.')
       return
     }
 
-    setCreating(true)
+    setSubmitting(true)
     setError(null)
     setSuccess(null)
     try {
-      await createDocType({
-        name: name.trim(),
-        description: description.trim() || undefined,
-      })
-      setName('')
-      setDescription('')
-      setSuccess('Document type created successfully.')
+      if (editingDocType) {
+        await editDocType(editingDocType.doc_type_id, {
+          name: trimmedName,
+          description: description.trim() || undefined,
+          status,
+        })
+        setSuccess(`Document type "${trimmedName}" updated successfully.`)
+      } else {
+        await createDocType({
+          name: trimmedName,
+          description: description.trim() || undefined,
+        })
+        setSuccess(`Document type "${trimmedName}" created successfully.`)
+      }
+      resetForm()
       await loadData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create document type')
+      setError(err instanceof Error ? err.message : 'Failed to save document type')
     } finally {
-      setCreating(false)
+      setSubmitting(false)
     }
   }
 
-  async function handleToggleStatus(dt: DocType) {
-    const nextStatus = dt.status === 'active' ? 'archived' : 'active'
+  async function handleArchive(dt: DocType) {
     setError(null)
     try {
-      await editDocType(dt.doc_type_id, { status: nextStatus })
+      await editDocType(dt.doc_type_id, { status: 'archived' })
+      setSuccess(`"${dt.name}" has been archived.`)
       await loadData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to ${nextStatus} document type`)
+      setError(err instanceof Error ? err.message : 'Failed to archive document type')
+    }
+  }
+
+  async function handleActivate(dt: DocType) {
+    setError(null)
+    try {
+      await editDocType(dt.doc_type_id, { status: 'active' })
+      setSuccess(`"${dt.name}" has been activated.`)
+      await loadData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to activate document type')
     }
   }
 
@@ -104,241 +139,206 @@ export function DocTypeManagerScreen() {
     setError(null)
     try {
       await deleteDocType(dt.doc_type_id)
+      setSuccess(`"${dt.name}" deleted.`)
+      if (editingDocType?.doc_type_id === dt.doc_type_id) {
+        resetForm()
+      }
       await loadData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete document type')
     }
   }
 
-  function startEdit(dt: DocType) {
-    setEditingId(dt.doc_type_id)
-    setEditName(dt.name)
-    setEditDesc(dt.description ?? '')
-  }
-
-  async function saveEdit(dt: DocType) {
-    if (editName.trim().length < 3 || editName.trim().length > 80) {
-      setError('Document type name must be between 3 and 80 characters.')
-      return
-    }
-
-    setSavingEdit(true)
-    setError(null)
-    try {
-      await editDocType(dt.doc_type_id, {
-        name: editName.trim(),
-        description: editDesc.trim() || undefined,
-      })
-      setEditingId(null)
-      await loadData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update document type')
-    } finally {
-      setSavingEdit(false)
-    }
-  }
-
   const activeTypes = types.filter((t) => t.status === 'active')
   const archivedTypes = types.filter((t) => t.status === 'archived')
+  const displayedTypes = activeTab === 'active' ? activeTypes : archivedTypes
 
   return (
     <DocDeskLayout activeItem="doc-types">
       <div className={styles.container} data-testid="docdesk-doctype-manager-screen">
-        <Stack gap={1}>
-          <Text as="h1" size="2xl" weight="bold">
-            Document Type Management
-          </Text>
-          <Text tone="textMuted">
-            Configure institutional document types, turnaround times, and active statuses.
-          </Text>
-        </Stack>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+          <Stack gap={1}>
+            <Text as="h1" size="2xl" weight="bold">
+              Manage document types
+            </Text>
+            <Text tone="textMuted">
+              Configure institutional document types, turnaround times, and active statuses.
+            </Text>
+          </Stack>
+
+          <Button
+            variant="primary"
+            size="md"
+            onClick={resetForm}
+            data-testid="add-type-button"
+          >
+            + Add Type
+          </Button>
+        </div>
 
         {error && <Alert tone="danger">{error}</Alert>}
         {success && <Alert tone="success">{success}</Alert>}
 
         <div className={styles.twoColumnGrid}>
-          {/* Left Panel: Add / Edit Document Type Form */}
+          {/* Panel A: ADD / EDIT DOCUMENT TYPE */}
           <div className={`${glass.panel} ${glass.tintBlue}`}>
-            <form onSubmit={handleCreate} noValidate>
+            <form onSubmit={handleSubmit} noValidate>
               <Stack gap={4}>
-                <Text as="h2" size="md" weight="bold">
-                  Add New Document Type
+                <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ADD / EDIT DOCUMENT TYPE
                 </Text>
 
-                <TextField
-                  label="Type Name (3-80 chars)"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Bonafide Certificate, Transcript"
-                  required
-                  data-testid="doctype-name-input"
-                />
+                <Stack gap={1}>
+                  <TextField
+                    label="Name *"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Bonafide Certificate"
+                    required
+                    data-testid="doctype-name-input"
+                  />
+                  <Text size="xs" tone="textMuted">
+                    3-80 characters, must be unique
+                  </Text>
+                </Stack>
 
                 <TextField
-                  label="Description (Optional)"
+                  label="Description (optional)"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Official verification of student enrollment"
                   data-testid="doctype-desc-input"
                 />
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button type="submit" loading={creating} data-testid="create-doctype-button">
-                    + Create Type
+                {editingDocType && (
+                  <SelectField
+                    label="Status (edit only)"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as 'active' | 'archived')}
+                    options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'archived', label: 'Archived' },
+                    ]}
+                    data-testid="doctype-status-select"
+                  />
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+                  {editingDocType && (
+                    <Button type="button" variant="secondary" onClick={resetForm}>
+                      Cancel
+                    </Button>
+                  )}
+                  <Button type="submit" loading={submitting} data-testid="create-doctype-button">
+                    Save Type
                   </Button>
                 </div>
               </Stack>
             </form>
           </div>
 
-          {/* Right Panel: Existing Types List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-            {/* Active Document Types */}
-            <div className={`${glass.panel} ${glass.tintBlue}`}>
-              <Stack gap={3}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text as="h2" size="md" weight="bold">
-                    Active Catalogues ({activeTypes.length})
-                  </Text>
-                  <Button variant="secondary" size="sm" onClick={loadData}>
-                    ↻ Refresh
-                  </Button>
-                </div>
-
-                {loading ? (
-                  <div style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
-                    <Spinner label="Loading document types..." />
-                  </div>
-                ) : activeTypes.length === 0 ? (
-                  <Text size="sm" tone="textMuted">No active document types configured.</Text>
-                ) : (
-                  <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Name</th>
-                          <th>Description</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {activeTypes.map((dt) => (
-                          <tr key={dt.doc_type_id} data-testid={`doctype-row-${dt.doc_type_id}`}>
-                            <td><Text size="xs" weight="bold">{dt.doc_type_id}</Text></td>
-                            <td>
-                              {editingId === dt.doc_type_id ? (
-                                <input
-                                  value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  style={{
-                                    width: '100%',
-                                    padding: '6px 8px',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: '1px solid var(--color-border)',
-                                    background: 'var(--color-surface)',
-                                    color: 'var(--color-text)',
-                                  }}
-                                />
-                              ) : (
-                                <Text size="sm" weight="medium">{dt.name}</Text>
-                              )}
-                            </td>
-                            <td>
-                              {editingId === dt.doc_type_id ? (
-                                <input
-                                  value={editDesc}
-                                  onChange={(e) => setEditDesc(e.target.value)}
-                                  style={{
-                                    width: '100%',
-                                    padding: '6px 8px',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: '1px solid var(--color-border)',
-                                    background: 'var(--color-surface)',
-                                    color: 'var(--color-text)',
-                                  }}
-                                />
-                              ) : (
-                                <Text size="xs" tone="textMuted">{dt.description || '—'}</Text>
-                              )}
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                                {editingId === dt.doc_type_id ? (
-                                  <>
-                                    <Button size="sm" variant="primary" onClick={() => saveEdit(dt)} loading={savingEdit}>
-                                      Save
-                                    </Button>
-                                    <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>
-                                      Cancel
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Button size="sm" variant="secondary" onClick={() => startEdit(dt)}>
-                                      Edit
-                                    </Button>
-                                    <Button size="sm" variant="secondary" onClick={() => handleToggleStatus(dt)}>
-                                      Archive
-                                    </Button>
-                                    <Button size="sm" variant="danger" onClick={() => handleDelete(dt)}>
-                                      Delete
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </Stack>
-            </div>
-
-            {/* Archived Document Types */}
-            {archivedTypes.length > 0 && (
-              <div className={`${glass.panel} ${glass.tintBlue}`}>
-                <Stack gap={3}>
-                  <Text as="h2" size="md" weight="bold">
-                    Archived Catalogues ({archivedTypes.length})
-                  </Text>
-
-                  <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Name</th>
-                          <th>Description</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {archivedTypes.map((dt) => (
-                          <tr key={dt.doc_type_id}>
-                            <td><Text size="xs" weight="bold">{dt.doc_type_id}</Text></td>
-                            <td><Text size="sm">{dt.name}</Text></td>
-                            <td><Text size="xs" tone="textMuted">{dt.description || '—'}</Text></td>
-                            <td>
-                              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                                <Button size="sm" variant="secondary" onClick={() => handleToggleStatus(dt)}>
-                                  Restore to Active
-                                </Button>
-                                <Button size="sm" variant="danger" onClick={() => handleDelete(dt)}>
-                                  Delete
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Stack>
+          {/* Panel B: EXISTING DOCUMENT TYPES */}
+          <div className={`${glass.panel} ${glass.tintBlue}`}>
+            <Stack gap={3}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  EXISTING DOCUMENT TYPES
+                </Text>
+                <Button variant="secondary" size="sm" onClick={loadData}>
+                  ↻ Refresh
+                </Button>
               </div>
-            )}
+
+              {/* Segmented Control / Tabs */}
+              <div className={styles.tabsRow}>
+                <button
+                  type="button"
+                  className={`${styles.tabBtn} ${activeTab === 'active' ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab('active')}
+                >
+                  Active ({activeTypes.length})
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.tabBtn} ${activeTab === 'archived' ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab('archived')}
+                >
+                  Archived ({archivedTypes.length})
+                </button>
+              </div>
+
+              {loading ? (
+                <div style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
+                  <Spinner label="Loading document types..." />
+                </div>
+              ) : displayedTypes.length === 0 ? (
+                <Text size="sm" tone="textMuted">
+                  No {activeTab} document types found.
+                </Text>
+              ) : (
+                <div className={styles.tableWrapper}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayedTypes.map((dt) => (
+                        <tr key={dt.doc_type_id} data-testid={`doctype-row-${dt.doc_type_id}`}>
+                          <td>
+                            <Text size="sm" weight="medium">{dt.name}</Text>
+                          </td>
+                          <td>
+                            <Text size="xs" tone="textMuted">{dt.description || '—'}</Text>
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '9999px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                background: dt.status === 'active' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                                color: dt.status === 'active' ? '#22c55e' : '#9ca3af',
+                              }}
+                            >
+                              {dt.status === 'active' ? 'Active' : 'Archived'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                              <Button size="sm" variant="secondary" onClick={() => startEdit(dt)}>
+                                Edit
+                              </Button>
+                              {dt.status === 'active' ? (
+                                <Button size="sm" variant="secondary" onClick={() => handleArchive(dt)}>
+                                  Archive
+                                </Button>
+                              ) : (
+                                <Button size="sm" variant="secondary" onClick={() => handleActivate(dt)}>
+                                  Activate
+                                </Button>
+                              )}
+                              <Button size="sm" variant="danger" onClick={() => handleDelete(dt)}>
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <p className={styles.footerNote}>
+                Archived types are hidden from new-request selection.
+              </p>
+            </Stack>
           </div>
         </div>
       </div>

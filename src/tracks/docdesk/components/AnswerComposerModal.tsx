@@ -97,17 +97,20 @@ export function AnswerComposerModal({
             {error && <Alert tone="danger">{error}</Alert>}
 
             <TextField
-              label="Official Message / Resolution Notes"
+              label="Answer message *"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
-              hint="State whether the document is attached, instructions for collection, or specific refusal reasons (1-2000 chars)."
+              hint="Initial answer requires a 1-2000 character message."
               data-testid="answer-message-input"
             />
 
             <Stack gap={2}>
               <Text as="label" size="sm" weight="medium">
-                Official Document (Optional, PDF or DOCX up to 10 MB)
+                Document from staff (optional)
+              </Text>
+              <Text size="xs" tone="textMuted">
+                Attach PDF or Word (.docx), max 10 MB.
               </Text>
 
               {request.document && !removeDocument && (
@@ -179,7 +182,7 @@ export function AnswerComposerModal({
                 Cancel
               </Button>
               <Button type="submit" loading={submitting} data-testid="submit-answer-button">
-                {isEditing ? 'Save Changes' : 'Submit Response'}
+                {isEditing ? 'Save Changes' : 'Send Answer'}
               </Button>
             </div>
           </Stack>

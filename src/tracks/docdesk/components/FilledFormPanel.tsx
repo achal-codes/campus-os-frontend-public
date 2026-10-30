@@ -95,11 +95,11 @@ export function FilledFormPanel({
     <div className={styles.container} data-testid="docdesk-filled-form-panel">
       <Stack gap={3}>
         <Stack gap={1}>
-          <Text as="h3" size="md" weight="bold">
-            Returned Filled Form Workflow
+          <Text as="h3" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            OPTIONAL: FILLED-IN FORM (ONLY IF STAFF ATTACHED A DOCUMENT)
           </Text>
           <Text size="xs" tone="textMuted">
-            When required, requesters download the official template/document, fill it out, and return it before final acknowledgement.
+            Choose completed PDF / DOCX / JPEG / PNG (max 10 MB). If already uploaded: Download or Remove (before acknowledgement).
           </Text>
         </Stack>
 
@@ -136,7 +136,7 @@ export function FilledFormPanel({
                   loading={deleting}
                   data-testid="delete-filled-form"
                 >
-                  Delete
+                  Remove
                 </Button>
               )}
               {canUpload && (
@@ -163,12 +163,6 @@ export function FilledFormPanel({
           </div>
         ) : (
           <Stack gap={2}>
-            <Text size="sm" tone="textMuted">
-              {request.status === 'answered' && request.document
-                ? 'No filled form submitted yet. If this document requires your signature/completion, upload it here.'
-                : 'A filled form can only be uploaded once Student Affairs has answered the request with an official document.'}
-            </Text>
-
             {canUpload && (
               <div>
                 <Button
@@ -176,8 +170,9 @@ export function FilledFormPanel({
                   variant="primary"
                   loading={uploading}
                   onClick={() => fileInputRef.current?.click()}
+                  data-testid="upload-filled-form-button"
                 >
-                  Upload Filled Form
+                  Upload Form
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -191,6 +186,10 @@ export function FilledFormPanel({
             )}
           </Stack>
         )}
+
+        <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic', marginTop: 'var(--space-1)' }}>
+          After upload: you can download or remove your filled form before acknowledgement. After acknowledgement: view/download only; no further upload, removal or acknowledgement.
+        </Text>
       </Stack>
     </div>
   )

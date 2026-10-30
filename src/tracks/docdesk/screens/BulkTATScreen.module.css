@@ -114,3 +114,16 @@
 .previewItem:last-child {
   border-bottom: none;
 }
+
+.rulesBox {
+  background: rgba(170, 59, 255, 0.05);
+  border: 1px dashed rgba(170, 59, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

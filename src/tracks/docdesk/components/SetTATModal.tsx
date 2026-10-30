@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { setTAT } from '../api/requests'
 import type { DocRequest } from '../types'
-import { todayIST } from '../utils/time'
+import { addDaysIST, todayIST } from '../utils/time'
 
 interface SetTATModalProps {
   request: DocRequest
@@ -64,26 +64,79 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
         <form onSubmit={handleSubmit} noValidate>
           <Stack gap={4}>
             <Text id="tat-modal-title" as="h2" size="lg" weight="bold">
-              Set Turnaround Time (TAT)
+              Set Turnaround Time
             </Text>
 
             {error && <Alert tone="danger">{error}</Alert>}
 
-            <TextField
-              label="Expected Completion Date (IST)"
-              type="date"
-              value={expectedBy}
-              onChange={(e) => setExpectedBy(e.target.value)}
-              min={todayIST()}
-              required
-              data-testid="tat-date-input"
-            />
+            <Stack gap={1}>
+              <TextField
+                label="Expected by (YYYY-MM-DD)"
+                type="date"
+                value={expectedBy}
+                onChange={(e) => setExpectedBy(e.target.value)}
+                min={todayIST()}
+                required
+                data-testid="tat-date-input"
+              />
+
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>
+                  Quick select:
+                </span>
+                <button
+                  type="button"
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    borderRadius: 6,
+                    border: '1px solid rgba(170, 59, 255, 0.3)',
+                    background: 'rgba(170, 59, 255, 0.08)',
+                    cursor: 'pointer',
+                    color: 'var(--color-text)',
+                  }}
+                  onClick={() => setExpectedBy(addDaysIST(3))}
+                >
+                  +3 days
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    borderRadius: 6,
+                    border: '1px solid rgba(170, 59, 255, 0.3)',
+                    background: 'rgba(170, 59, 255, 0.08)',
+                    cursor: 'pointer',
+                    color: 'var(--color-text)',
+                  }}
+                  onClick={() => setExpectedBy(addDaysIST(7))}
+                >
+                  +1 week
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    borderRadius: 6,
+                    border: '1px solid rgba(170, 59, 255, 0.3)',
+                    background: 'rgba(170, 59, 255, 0.08)',
+                    cursor: 'pointer',
+                    color: 'var(--color-text)',
+                  }}
+                  onClick={() => setExpectedBy(addDaysIST(14))}
+                >
+                  +2 weeks
+                </button>
+              </div>
+            </Stack>
 
             <TextField
-              label="Operational Note (Optional)"
+              label="TAT note (optional)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              hint="Optional message for internal queue tracking or requester notice."
+              placeholder="e.g. Verification in progress"
               data-testid="tat-note-input"
             />
 
@@ -92,7 +145,7 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
                 Cancel
               </Button>
               <Button type="submit" loading={submitting} data-testid="save-tat-button">
-                Set TAT
+                Save TAT
               </Button>
             </div>
           </Stack>

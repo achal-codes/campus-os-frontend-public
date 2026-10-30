@@ -57,6 +57,18 @@ export function todayIST(): string {
   return parts // en-CA produces YYYY-MM-DD
 }
 
+/** Add N days to today's date in IST as YYYY-MM-DD */
+export function addDaysIST(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: IST_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d)
+}
+
 /** Check if a YYYY-MM-DD date is strictly before today in IST */
 export function isOverdue(dateStr: string): boolean {
   return dateStr < todayIST()

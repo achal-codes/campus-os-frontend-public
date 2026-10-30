@@ -85,7 +85,7 @@ export function RequestFormScreen() {
         <div className={`${glassStyles.glassPanel} ${styles.formCard}`}>
           {/* Header */}
           <div className={styles.headerText}>
-            <h1 className={styles.title}>Request a Document</h1>
+            <h1 className={styles.title}>Request a document</h1>
             <p className={styles.subtitle}>Choose the document you need and explain why you need it.</p>
           </div>
 
@@ -110,7 +110,7 @@ export function RequestFormScreen() {
               <div className={styles.fieldGroup}>
                 <label htmlFor="doctype-select" className={styles.fieldLabel}>
                   <span>
-                    Document Type<span className={styles.requiredMark}>*</span>
+                    Document type<span className={styles.requiredMark}>*</span>
                   </span>
                 </label>
                 <select
@@ -121,12 +121,19 @@ export function RequestFormScreen() {
                   required
                   data-testid="doctype-select"
                 >
+                  <option value="" disabled>
+                    Select an active document type
+                  </option>
                   {docTypes.map((dt) => (
                     <option key={dt.doc_type_id} value={dt.doc_type_id}>
                       {dt.name}
                     </option>
                   ))}
                 </select>
+
+                <p className={styles.fieldHelper}>
+                  Examples: Bonafide Certificate, Transcript, Scholarship Form, Experience Certificate.
+                </p>
 
                 {selectedDocType?.description && (
                   <div className={styles.typeDescription}>
@@ -139,10 +146,17 @@ export function RequestFormScreen() {
               <div className={styles.fieldGroup}>
                 <div className={styles.fieldLabel}>
                   <label htmlFor="reason-textarea">
-                    Reason for Request<span className={styles.requiredMark}>*</span>
+                    Reason<span className={styles.requiredMark}>*</span>
                   </label>
-                  <span className={styles.charCounter} aria-live="polite">
-                    {reason.length} / 1000 characters
+                  <span
+                    className={`${styles.charCounter} ${
+                      reason.length > 0 && (reason.trim().length < 5 || reason.length > 1000)
+                        ? styles.charCounterInvalid
+                        : ''
+                    }`}
+                    aria-live="polite"
+                  >
+                    {reason.length} / 1000
                   </span>
                 </div>
                 <textarea
@@ -151,12 +165,13 @@ export function RequestFormScreen() {
                   rows={5}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="Explain why you require this document (e.g. scholarship application, passport renewal, visa clearance)..."
+                  placeholder="Needed for the scholarship application."
                   required
                   minLength={5}
                   maxLength={1000}
                   data-testid="request-reason-input"
                 />
+                <p className={styles.fieldHelper}>Required: 5-1000 characters</p>
               </div>
 
               {/* Form Action Controls */}
