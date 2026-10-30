@@ -457,8 +457,9 @@ export function StaffQueueScreen() {
                   variant="secondary"
                   size="sm"
                   onClick={() => setSelectedIds(new Set())}
+                  data-testid="clear-selection-button"
                 >
-                  Clear
+                  Clear selection
                 </Button>
                 <Button
                   variant="primary"

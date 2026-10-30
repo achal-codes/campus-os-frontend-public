@@ -92,7 +92,7 @@ export function FilledFormPanel({
   }
 
   return (
-    <div className={styles.container} data-testid="docdesk-filled-form-panel">
+    <div className={styles.container} data-testid="filled-form-panel">
       <Stack gap={3}>
         <Stack gap={1}>
           <Text as="h3" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>

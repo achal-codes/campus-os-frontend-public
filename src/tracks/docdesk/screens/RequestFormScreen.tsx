@@ -86,7 +86,7 @@ export function RequestFormScreen() {
           {/* Header */}
           <div className={styles.headerText}>
             <h1 className={styles.title}>Request a document</h1>
-            <p className={styles.subtitle}>Choose the document you need and explain why you need it.</p>
+            <p className={styles.subtitle}>Submit a request for bonafide certificates, transcripts, or official letters.</p>
           </div>
 
           {error && <Alert tone="danger">{error}</Alert>}
@@ -189,7 +189,7 @@ export function RequestFormScreen() {
                   disabled={submitting || reason.trim().length < 5}
                   data-testid="submit-request-button"
                 >
-                  Submit Request
+                  Submit request
                 </Button>
               </div>
             </form>

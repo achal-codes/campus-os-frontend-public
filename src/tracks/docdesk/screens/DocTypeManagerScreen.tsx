@@ -159,10 +159,10 @@ export function DocTypeManagerScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
           <Stack gap={1}>
             <Text as="h1" size="2xl" weight="bold">
-              Manage document types
+              Document types
             </Text>
             <Text tone="textMuted">
-              Configure institutional document types, turnaround times, and active statuses.
+              Manage the types of documents students and faculty can request.
             </Text>
           </Stack>
 
@@ -311,7 +311,7 @@ export function DocTypeManagerScreen() {
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                              <Button size="sm" variant="secondary" onClick={() => startEdit(dt)}>
+                              <Button size="sm" variant="secondary" onClick={() => startEdit(dt)} data-testid={`edit-dt-${dt.doc_type_id}`}>
                                 Edit
                               </Button>
                               {dt.status === 'active' ? (

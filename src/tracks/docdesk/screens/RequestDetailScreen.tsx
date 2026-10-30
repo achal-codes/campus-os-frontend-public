@@ -204,7 +204,7 @@ export function RequestDetailScreen() {
                 loading={acknowledging}
                 data-testid="acknowledge-request-button"
               >
-                Acknowledge
+                Acknowledge receipt
               </Button>
             )}
           </div>

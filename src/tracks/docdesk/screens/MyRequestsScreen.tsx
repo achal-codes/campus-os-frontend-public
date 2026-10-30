@@ -123,13 +123,13 @@ export function MyRequestsScreen() {
         {/* Header */}
         <div className={styles.headerRow}>
           <div className={styles.headerText}>
-            <h1 className={styles.title}>My document requests</h1>
-            <p className={styles.subtitle}>Track your submitted document requests and inspect their current status.</p>
+            <h1 className={styles.title}>My requests</h1>
+            <p className={styles.subtitle}>Track the status of your document requests.</p>
           </div>
 
           <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
             <Button variant="primary" size="md" data-testid="new-request-button">
-              New Request
+              New request
             </Button>
           </Link>
         </div>
@@ -230,12 +230,12 @@ export function MyRequestsScreen() {
         ) : items.length === 0 ? (
           <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Text as="h3" size="md" weight="medium">
-              {isFiltered ? 'No requests match these filters' : 'No requests yet'}
+              {isFiltered ? 'No requests match these filters' : "No requests found. Click 'New request' to get started."}
             </Text>
             <Text size="sm" tone="textMuted" style={{ marginTop: 'var(--space-2)' }}>
               {isFiltered
                 ? 'Try resetting the filters to view all your document requests.'
-                : 'You have not submitted any document requests yet.'}
+                : 'Submit your bonafide certificates, transcripts, or official letters.'}
             </Text>
             <div style={{ marginTop: 'var(--space-4)' }}>
               {isFiltered ? (
@@ -245,7 +245,7 @@ export function MyRequestsScreen() {
               ) : (
                 <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
                   <Button variant="primary" size="sm">
-                    New Request
+                    New request
                   </Button>
                 </Link>
               )}
@@ -258,11 +258,12 @@ export function MyRequestsScreen() {
               <table className={glassStyles.glassTable} aria-label="My Requests Table">
                 <thead>
                   <tr>
-                    <th>Request ID</th>
+                    <th>ID</th>
                     <th>Document type</th>
-                    <th>Submitted date</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    <th>TAT</th>
+                    <th>Submitted</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -290,15 +291,15 @@ export function MyRequestsScreen() {
                         </Text>
                       </td>
                       <td>
+                        <StatusBadge status={r.status} />
+                      </td>
+                      <td>
+                        {r.tat ? <TATBadge tat={r.tat} /> : <Text size="xs" tone="textMuted">—</Text>}
+                      </td>
+                      <td>
                         <Text size="xs" tone="textMuted">
                           {formatDate(r.created_at)}
                         </Text>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          <StatusBadge status={r.status} />
-                          {r.tat && <TATBadge tat={r.tat} />}
-                        </div>
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <Link to={`/tracks/docdesk/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
