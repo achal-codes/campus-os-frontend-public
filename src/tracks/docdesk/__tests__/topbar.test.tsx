@@ -4,13 +4,16 @@ import { MemoryRouter } from 'react-router'
 import { renderWithProviders, screen } from '@/test/render'
 import { DocDeskTopbar } from '../components/DocDeskTopbar'
 
-// Mock useProfile to return custom profile
+const mockUseProfile = vi.fn(() => ({
+  profile: { dept: 'Student Affairs' },
+  loading: false,
+  error: null,
+  isStudentAffairs: true,
+  retry: () => {},
+}))
+
 vi.mock('../hooks/useProfile', () => ({
-  useProfile: () => ({
-    profile: { dept: 'Student Affairs' },
-    loading: false,
-    error: null,
-  }),
+  useProfile: () => mockUseProfile(),
 }))
 
 describe('DocDeskTopbar navigation and interaction', () => {
@@ -45,6 +48,31 @@ describe('DocDeskTopbar navigation and interaction', () => {
     expect(screen.getByTestId('nav-docdesk-doctypes')).toBeInTheDocument()
     expect(screen.getByText('Document Types')).toBeInTheDocument()
     expect(screen.queryByTestId('nav-docdesk-my-requests')).not.toBeInTheDocument()
+  })
+
+  it('shows Requester navigation links and Office Staff label for office_staff not in Student Affairs', () => {
+    mockUseProfile.mockReturnValueOnce({
+      profile: { dept: 'Accounts' },
+      loading: false,
+      error: null,
+      isStudentAffairs: false,
+      retry: () => {},
+    })
+
+    renderWithProviders(
+      <MemoryRouter>
+        <DocDeskTopbar />
+      </MemoryRouter>,
+      {
+        user: { id: 'accounts@campus.edu', name: 'Accounts Officer', email: 'accounts@campus.edu', role: 'office_staff' },
+      },
+    )
+
+    expect(screen.getByTestId('nav-docdesk-my-requests')).toBeInTheDocument()
+    expect(screen.getByTestId('nav-docdesk-new')).toBeInTheDocument()
+    expect(screen.queryByTestId('nav-docdesk-staff-dash')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('nav-docdesk-staff')).not.toBeInTheDocument()
+    expect(screen.getByText('Office Staff')).toBeInTheDocument()
   })
 
   it('shows Admin navigation links for admin role', () => {
@@ -83,3 +111,4 @@ describe('DocDeskTopbar navigation and interaction', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
+

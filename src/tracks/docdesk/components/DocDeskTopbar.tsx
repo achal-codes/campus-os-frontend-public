@@ -16,7 +16,7 @@ export function DocDeskTopbar() {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
 
-  const isStaff = user?.role === 'office_staff' && isStudentAffairs(profile?.dept)
+  const isStaff = user?.role === 'office_staff' && isStudentAffairs(profile?.dept ?? (user as any)?.dept)
   const isAdmin = user?.role === 'admin'
 
   // Determine navigation items according to user role
@@ -44,7 +44,7 @@ export function DocDeskTopbar() {
     ]
   } else {
     roleTitle = 'DocDesk Requester'
-    roleLabel = user?.role === 'faculty' ? 'Faculty' : 'Student'
+    roleLabel = user?.role === 'faculty' ? 'Faculty' : user?.role === 'office_staff' ? 'Office Staff' : 'Student'
     navItems = [
       { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
       { label: 'New Request', to: '/tracks/docdesk/new', testId: 'nav-docdesk-new' },

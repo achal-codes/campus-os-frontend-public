@@ -42,10 +42,12 @@ export function useProfile(): ProfileState {
     }
   }, [needsProfile, user, fetchProfile])
 
-  const sa = user?.role === 'office_staff' && profile ? isStudentAffairs(profile.dept) : false
+  const initialDept = (user as any)?.dept
+  const dept = profile?.dept ?? initialDept
+  const sa = user?.role === 'office_staff' && isStudentAffairs(dept)
 
   return {
-    profile: needsProfile ? profile : null,
+    profile: needsProfile ? (profile ?? (initialDept && user ? { role: user.role, name: user.name, email_id: user.email, dept: String(initialDept) } : null)) : null,
     loading: needsProfile ? loading : false,
     error: needsProfile ? error : null,
     isStudentAffairs: sa,

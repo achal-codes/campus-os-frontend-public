@@ -119,6 +119,11 @@ export function StaffDashboardScreen() {
                   Manage Document Types
                 </Button>
               </Link>
+              <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" size="md" data-testid="dash-goto-new-request">
+                  Submit Request
+                </Button>
+              </Link>
             </div>
 
             {/* Urgent Pending Queue */}
