@@ -1,0 +1,116 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  margin-bottom: var(--space-2);
+  transition: opacity 0.15s ease;
+}
+
+.backLink:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1.3fr 1fr;
+    align-items: start;
+  }
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  margin-top: var(--space-3);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.table th {
+  padding: var(--space-3) var(--space-4);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.selectedRow td {
+  background-color: var(--color-primary-subtle);
+}
+
+.previewList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 220px;
+  overflow-y: auto;
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.previewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  padding: var(--space-1) 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.previewItem:last-child {
+  border-bottom: none;
+}

@@ -71,6 +71,19 @@ export const routes: RouteObject[] = [
 
   // Student Affairs workspace
   {
+    path: 'staff/dashboard',
+    lazy: async () => {
+      const { StaffDashboardScreen } = await import('./screens/StaffDashboardScreen')
+      return {
+        Component: () => (
+          <StudentAffairsGuard>
+            <StaffDashboardScreen />
+          </StudentAffairsGuard>
+        ),
+      }
+    },
+  },
+  {
     path: 'staff',
     lazy: async () => {
       const { StaffQueueScreen } = await import('./screens/StaffQueueScreen')
@@ -78,6 +91,19 @@ export const routes: RouteObject[] = [
         Component: () => (
           <StudentAffairsGuard>
             <StaffQueueScreen />
+          </StudentAffairsGuard>
+        ),
+      }
+    },
+  },
+  {
+    path: 'staff/bulk-tat',
+    lazy: async () => {
+      const { BulkTATScreen } = await import('./screens/BulkTATScreen')
+      return {
+        Component: () => (
+          <StudentAffairsGuard>
+            <BulkTATScreen />
           </StudentAffairsGuard>
         ),
       }

@@ -353,7 +353,13 @@ export function RequestDetailScreen() {
             {/* Filled-Form Round Trip Panel (Visible only when appropriate) */}
             {request.document && (
               <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-5)' }}>
-                <FilledFormPanel request={request} onRefresh={loadData} />
+                <FilledFormPanel
+                  request={request}
+                  isOwner={request.requested_by === user?.email}
+                  isStudentAffairs={isStudentAffairs}
+                  role={user?.role ?? 'student'}
+                  onUpdated={loadData}
+                />
               </div>
             )}
           </>
@@ -369,7 +375,7 @@ export function RequestDetailScreen() {
           <EditRequestModal
             request={request}
             onClose={() => setShowEditModal(false)}
-            onSaved={async () => {
+            onSuccess={async () => {
               setShowEditModal(false)
               await loadData()
             }}

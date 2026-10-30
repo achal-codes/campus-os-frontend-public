@@ -33,7 +33,7 @@ export function MyRequestsScreen() {
     let active = true
     async function loadTypes() {
       try {
-        const res = await listDocTypes({ limit: 100 })
+        const res = await listDocTypes()
         if (active) setDocTypes(res.items)
       } catch {
         // Silently keep empty list if types fail to load

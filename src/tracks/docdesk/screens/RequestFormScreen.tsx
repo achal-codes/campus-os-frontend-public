@@ -24,7 +24,7 @@ export function RequestFormScreen() {
     let active = true
     async function loadCatalogue() {
       try {
-        const res = await listDocTypes({ status: 'active', limit: 100 })
+        const res = await listDocTypes()
         if (active) {
           const activeOnly = res.items.filter((d) => d.status === 'active')
           setDocTypes(activeOnly)
