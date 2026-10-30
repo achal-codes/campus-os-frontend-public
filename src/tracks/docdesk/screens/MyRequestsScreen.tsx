@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { listRequests } from '../api/requests'
@@ -8,7 +8,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
 import glassStyles from '../theme/glass.module.css'
 import type { DocRequest, DocType, RequestStatus } from '../types'
-import { formatDate } from '../utils/time'
+import { formatDate, formatDateTime } from '../utils/time'
 import styles from './MyRequestsScreen.module.css'
 
 const STATUS_OPTIONS = [
@@ -19,8 +19,9 @@ const STATUS_OPTIONS = [
 ]
 
 export function MyRequestsScreen() {
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const [docTypeFilter, setDocTypeFilter] = useState<string>('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [statusFilter, setStatusFilter] = useState<string>(() => searchParams.get('status') ?? '')
+  const [docTypeFilter, setDocTypeFilter] = useState<string>(() => searchParams.get('doc_type_id') ?? '')
   const [docTypes, setDocTypes] = useState<DocType[]>([])
   const [items, setItems] = useState<DocRequest[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
@@ -28,6 +29,14 @@ export function MyRequestsScreen() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  // Sync state changes with URL query parameters
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (statusFilter) params.set('status', statusFilter)
+    if (docTypeFilter) params.set('doc_type_id', docTypeFilter)
+    setSearchParams(params, { replace: true })
+  }, [statusFilter, docTypeFilter, setSearchParams])
 
   // Load available document types for the filter dropdown
   useEffect(() => {
@@ -297,7 +306,7 @@ export function MyRequestsScreen() {
                         {r.tat ? <TATBadge tat={r.tat} /> : <Text size="xs" tone="textMuted">—</Text>}
                       </td>
                       <td>
-                        <Text size="xs" tone="textMuted">
+                        <Text size="xs" tone="textMuted" title={formatDateTime(r.created_at)}>
                           {formatDate(r.created_at)}
                         </Text>
                       </td>
@@ -350,7 +359,7 @@ export function MyRequestsScreen() {
                     <Text size="xs" tone="textMuted">
                       Submitted:
                     </Text>
-                    <Text size="xs">{formatDate(r.created_at)}</Text>
+                    <Text size="xs" title={formatDateTime(r.created_at)}>{formatDate(r.created_at)}</Text>
                   </div>
 
                   {r.tat && (

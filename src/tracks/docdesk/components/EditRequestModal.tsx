@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { editRequest } from '../api/requests'
 import type { DocRequest } from '../types'
@@ -13,6 +13,26 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
   const [reason, setReason] = useState(request.reason)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const isDirty = reason !== request.reason
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty && !submitting) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty, submitting])
+
+  function handleCancel() {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
+      return
+    }
+    onClose()
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -75,7 +95,7 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
             />
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="secondary" onClick={onClose} disabled={submitting}>
+              <Button variant="secondary" onClick={handleCancel} disabled={submitting}>
                 Cancel
               </Button>
               <Button type="submit" loading={submitting} data-testid="save-request-button">

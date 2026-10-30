@@ -17,8 +17,22 @@ export function RequestFormScreen() {
   const [loadingDocTypes, setLoadingDocTypes] = useState(true)
   const [selectedDocTypeId, setSelectedDocTypeId] = useState(preselectedDocTypeId)
   const [reason, setReason] = useState('')
+  const [touchedReason, setTouchedReason] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const isDirty = reason.length > 0
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty && !submitting) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty, submitting])
 
   useEffect(() => {
     let active = true
@@ -165,18 +179,29 @@ export function RequestFormScreen() {
                   rows={5}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
+                  onBlur={() => setTouchedReason(true)}
                   placeholder="Needed for the scholarship application."
                   required
                   minLength={5}
                   maxLength={1000}
+                  aria-invalid={touchedReason && (reason.trim().length < 5 || reason.length > 1000)}
+                  aria-describedby="reason-helper"
                   data-testid="request-reason-input"
                 />
-                <p className={styles.fieldHelper}>Required: 5-1000 characters</p>
+                <p id="reason-helper" className={styles.fieldHelper}>Required: 5-1000 characters</p>
               </div>
 
               {/* Form Action Controls */}
               <div className={styles.actionsRow}>
-                <Link to="/tracks/docdesk/my-requests" style={{ textDecoration: 'none' }}>
+                <Link
+                  to="/tracks/docdesk/my-requests"
+                  style={{ textDecoration: 'none' }}
+                  onClick={(e) => {
+                    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
                   <Button type="button" variant="secondary" size="md">
                     Cancel
                   </Button>

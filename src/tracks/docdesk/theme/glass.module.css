@@ -135,11 +135,31 @@
   color: var(--color-text-muted);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   background: rgba(255, 255, 255, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 :global([data-theme='dark']) .glassTable th {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.2);
+}
+
+.tableLoadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+:global([data-theme='dark']) .tableLoadingOverlay {
+  background: rgba(20, 21, 26, 0.6);
 }
 
 .glassTable td {
@@ -184,5 +204,17 @@
   .glassTable td {
     transition: none !important;
     transform: none !important;
+  }
+}
+
+/* Accessibility: High contrast / forced colors */
+@media (forced-colors: active) {
+  .glassPanel,
+  .glassCard,
+  .glassTableContainer,
+  .glassInput,
+  .glassSelect,
+  .glassTextarea {
+    border: 1px solid ButtonText !important;
   }
 }

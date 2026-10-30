@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { Alert, Button, Stack, Text } from '@/ui'
 import { deleteFilledForm, downloadFilledForm, uploadFilledForm } from '../api/requests'
 import { can } from '../permissions/permissions'
@@ -40,10 +40,9 @@ export function FilledFormPanel({
   const canDownload = can('filledForm.download', permCtx)
   const canDelete = can('filledForm.delete', permCtx)
 
-  async function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const [isDragging, setIsDragging] = useState(false)
 
+  async function processUpload(file: File) {
     const validation = validateFilledForm(file)
     if (!validation.valid) {
       setError(validation.error ?? 'Invalid file')
@@ -59,8 +58,23 @@ export function FilledFormPanel({
       setError(err instanceof Error ? err.message : 'Failed to upload filled form')
     } finally {
       setUploading(false)
-      // reset file input
-      e.target.value = ''
+    }
+  }
+
+  async function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await processUpload(file)
+    e.target.value = ''
+  }
+
+  function handleDrop(e: DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
+    if (!canUpload) return
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      processUpload(file)
     }
   }
 
@@ -164,16 +178,29 @@ export function FilledFormPanel({
         ) : (
           <Stack gap={2}>
             {canUpload && (
-              <div>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  loading={uploading}
-                  onClick={() => fileInputRef.current?.click()}
-                  data-testid="upload-filled-form-button"
-                >
-                  Upload Form
-                </Button>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                className={`${styles.dropzone} ${isDragging ? styles.dropzoneActive : ''}`}
+              >
+                <Stack gap={2} style={{ alignItems: 'center' }}>
+                  <Text size="xs" tone="textMuted">
+                    Drag and drop your completed form here, or
+                  </Text>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    loading={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    data-testid="upload-filled-form-button"
+                  >
+                    Browse Files
+                  </Button>
+                  <Text size="xs" tone="textMuted">
+                    Accepted: PDF, DOCX, JPEG, PNG (max 10 MB)
+                  </Text>
+                </Stack>
                 <input
                   ref={fileInputRef}
                   type="file"

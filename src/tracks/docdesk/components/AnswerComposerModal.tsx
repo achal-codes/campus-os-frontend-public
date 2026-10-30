@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { createAnswer, editAnswer } from '../api/requests'
 import type { DocRequest } from '../types'
@@ -22,6 +22,43 @@ export function AnswerComposerModal({
   const [removeDocument, setRemoveDocument] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const isDirty = message !== (request.answer?.message ?? '') || file !== null || removeDocument
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty && !submitting) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty, submitting])
+
+  function handleCancel() {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
+      return
+    }
+    onClose()
+  }
+
+  function handleDrop(e: DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
+    const dropped = e.dataTransfer.files?.[0]
+    if (!dropped) return
+    const validation = validateAnswerDocument(dropped)
+    if (!validation.valid) {
+      setError(validation.error ?? 'Invalid file')
+      setFile(null)
+      return
+    }
+    setError(null)
+    setFile(dropped)
+    setRemoveDocument(false)
+  }
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0]
@@ -157,19 +194,35 @@ export function AnswerComposerModal({
                 </Alert>
               )}
 
-              <input
-                type="file"
-                accept={ANSWER_DOC_ACCEPT}
-                onChange={handleFileChange}
-                disabled={submitting}
-                data-testid="answer-document-file-input"
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
                 style={{
-                  fontSize: 'var(--text-sm)',
-                  padding: 'var(--space-2)',
-                  border: '1px dashed var(--color-border)',
+                  border: isDragging ? '2px dashed var(--color-primary)' : '1px dashed var(--color-border)',
+                  backgroundColor: isDragging ? 'rgba(170, 59, 255, 0.08)' : 'transparent',
                   borderRadius: 'var(--radius-sm)',
+                  padding: 'var(--space-3)',
+                  textAlign: 'center',
+                  transition: 'all 0.2s ease',
                 }}
-              />
+              >
+                <input
+                  type="file"
+                  accept={ANSWER_DOC_ACCEPT}
+                  onChange={handleFileChange}
+                  disabled={submitting}
+                  data-testid="answer-document-file-input"
+                  style={{
+                    fontSize: 'var(--text-sm)',
+                    padding: 'var(--space-1)',
+                    cursor: 'pointer',
+                  }}
+                />
+                <Text size="xs" tone="textMuted" style={{ marginTop: 4 }}>
+                  Drag and drop document file here (PDF or DOCX, max 10 MB)
+                </Text>
+              </div>
               {file && (
                 <Text size="xs" tone="primary">
                   Selected new file: {file.name} ({formatFileSize(file.size)})
@@ -178,7 +231,7 @@ export function AnswerComposerModal({
             </Stack>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="secondary" onClick={onClose} disabled={submitting}>
+              <Button variant="secondary" onClick={handleCancel} disabled={submitting}>
                 Cancel
               </Button>
               <Button type="submit" loading={submitting} data-testid="submit-answer-button">

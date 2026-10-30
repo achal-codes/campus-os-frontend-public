@@ -22,3 +22,17 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: center;
+  transition: all 0.2s ease;
+  background-color: var(--color-surface-muted);
+}
+
+.dropzoneActive {
+  border-color: var(--color-primary);
+  background-color: rgba(170, 59, 255, 0.08);
+}

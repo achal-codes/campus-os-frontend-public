@@ -58,7 +58,31 @@ export function DocTypeManagerScreen() {
     }
   }, [])
 
+  const isDirty = editingDocType
+    ? name !== editingDocType.name || description !== (editingDocType.description ?? '')
+    : name.trim().length > 0 || description.trim().length > 0
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty && !submitting) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty, submitting])
+
   function resetForm() {
+    if (isDirty && typeof window.confirm === 'function') {
+      try {
+        if (!window.confirm('You have unsaved changes in the form. Discard?')) {
+          return
+        }
+      } catch {
+        // Ignore if confirm not implemented in environment
+      }
+    }
     setEditingDocType(null)
     setName('')
     setDescription('')

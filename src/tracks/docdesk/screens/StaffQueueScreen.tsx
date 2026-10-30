@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Alert, Button, SelectField, Spinner, Stack, Text, TextField } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { listRequests } from '../api/requests'
@@ -8,7 +8,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
 import glass from '../theme/glass.module.css'
 import type { DocRequest, DocType, RequestStatus } from '../types'
-import { formatDate } from '../utils/time'
+import { formatDate, formatDateTime } from '../utils/time'
 import styles from './StaffQueueScreen.module.css'
 
 const STATUS_OPTIONS = [
@@ -25,11 +25,12 @@ const SCOPE_OPTIONS = [
 
 export function StaffQueueScreen() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [statusFilter, setStatusFilter] = useState<string>('pending')
-  const [docTypeFilter, setDocTypeFilter] = useState<string>('')
-  const [scopeFilter, setScopeFilter] = useState<'all' | 'mine'>('all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>(() => searchParams.get('status') ?? 'pending')
+  const [docTypeFilter, setDocTypeFilter] = useState<string>(() => searchParams.get('doc_type_id') ?? '')
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'mine'>(() => (searchParams.get('scope') === 'mine' ? 'mine' : 'all'))
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '')
   const [docTypes, setDocTypes] = useState<DocType[]>([])
 
   const [items, setItems] = useState<DocRequest[]>([])
@@ -39,6 +40,16 @@ export function StaffQueueScreen() {
   const [error, setError] = useState<string | null>(null)
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  // Sync state changes with URL query parameters
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (statusFilter) params.set('status', statusFilter)
+    if (docTypeFilter) params.set('doc_type_id', docTypeFilter)
+    if (scopeFilter !== 'all') params.set('scope', scopeFilter)
+    if (searchQuery) params.set('q', searchQuery)
+    setSearchParams(params, { replace: true })
+  }, [statusFilter, docTypeFilter, scopeFilter, searchQuery, setSearchParams])
 
   // Load doc types for filter
   useEffect(() => {
@@ -377,7 +388,7 @@ export function StaffQueueScreen() {
                             <Text size="sm">{r.doc_type_name ?? r.doc_type_id}</Text>
                           </td>
                           <td>
-                            <Text size="xs" tone="textMuted">
+                            <Text size="xs" tone="textMuted" title={formatDateTime(r.created_at)}>
                               {formatDate(r.created_at)}
                             </Text>
                           </td>
@@ -431,7 +442,7 @@ export function StaffQueueScreen() {
                       <Text size="xs" tone="textMuted">
                         By {r.requested_by_name ?? r.requested_by} ({r.requested_by_role})
                       </Text>
-                      <Text size="xs" tone="textMuted">Submitted: {formatDate(r.created_at)}</Text>
+                      <Text size="xs" tone="textMuted" title={formatDateTime(r.created_at)}>Submitted: {formatDate(r.created_at)}</Text>
                     </Stack>
 
                     <div className={styles.mobileCardFooter}>
