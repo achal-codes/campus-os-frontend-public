@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { renderWithProviders, screen } from '@/test/render'
 import * as requestsApi from '../api/requests'
@@ -49,7 +49,7 @@ describe('BulkTATScreen (Screen 8)', () => {
   })
 
   it('renders pending requests and handles bulk selection', async () => {
-    vi.mocked(requestsApi.listRequests).mockResolvedValue({ items: mockPending, next_cursor: null })
+    vi.mocked(requestsApi.listRequests).mockResolvedValue({ count: mockPending.length, items: mockPending, next_cursor: null })
 
     renderWithProviders(
       <MemoryRouter>
@@ -70,7 +70,7 @@ describe('BulkTATScreen (Screen 8)', () => {
   })
 
   it('displays atomic error message when bulk submission fails', async () => {
-    vi.mocked(requestsApi.listRequests).mockResolvedValue({ items: mockPending, next_cursor: null })
+    vi.mocked(requestsApi.listRequests).mockResolvedValue({ count: mockPending.length, items: mockPending, next_cursor: null })
     vi.mocked(requestsApi.setBulkTAT).mockRejectedValue(
       new Error('Request REQ-BULK-02 is no longer pending and cannot have TAT set.'),
     )
@@ -92,7 +92,7 @@ describe('BulkTATScreen (Screen 8)', () => {
   })
 
   it('renders empty state when no pending requests exist', async () => {
-    vi.mocked(requestsApi.listRequests).mockResolvedValue({ items: [], next_cursor: null })
+    vi.mocked(requestsApi.listRequests).mockResolvedValue({ count: 0, items: [], next_cursor: null })
 
     renderWithProviders(
       <MemoryRouter>

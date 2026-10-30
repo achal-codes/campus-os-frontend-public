@@ -21,7 +21,7 @@ const mockDocTypes: DocType[] = [
 describe('RequestFormScreen', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ items: mockDocTypes, next_cursor: null })
+    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ count: mockDocTypes.length, items: mockDocTypes, next_cursor: null })
   })
 
   it('renders wireframe copy, filters out archived types, and has no file upload input', async () => {

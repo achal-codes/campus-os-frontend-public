@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { renderWithProviders, screen } from '@/test/render'
 import * as docTypesApi from '../api/docTypes'
@@ -24,7 +24,7 @@ const mockTypes: DocType[] = [
 describe('DocTypeManagerScreen (Screen 7)', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ items: mockTypes, next_cursor: null })
+    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ count: mockTypes.length, items: mockTypes, next_cursor: null })
   })
 
   it('renders wireframe copy, active list, and switches to archived tab', async () => {

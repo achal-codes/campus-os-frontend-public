@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { renderWithProviders, screen } from '@/test/render'
 import * as docTypesApi from '../api/docTypes'
@@ -52,8 +52,8 @@ const mockQueue: DocRequest[] = [
 describe('StaffQueueScreen (Screen 5)', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ items: mockTypes, next_cursor: null })
-    vi.mocked(requestsApi.listRequests).mockResolvedValue({ items: mockQueue, next_cursor: null })
+    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ count: mockTypes.length, items: mockTypes, next_cursor: null })
+    vi.mocked(requestsApi.listRequests).mockResolvedValue({ count: mockQueue.length, items: mockQueue, next_cursor: null })
   })
 
   it('renders queue rows and enforces selection checkbox only on pending requests', async () => {

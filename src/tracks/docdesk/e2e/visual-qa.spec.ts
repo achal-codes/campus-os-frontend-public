@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '../../../../e2e/fixtures'
+import type { Page } from '@playwright/test'
+import { expect, test } from '../../../../e2e/fixtures'
 import { LoginPage } from '../../../../e2e/pages/LoginPage'
 
 const mockDocTypes = [

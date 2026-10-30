@@ -60,11 +60,11 @@ const mockRequests: DocRequest[] = [
 describe('MyRequestsScreen', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ items: mockDocTypes, next_cursor: null })
+    vi.mocked(docTypesApi.listDocTypes).mockResolvedValue({ count: mockDocTypes.length, items: mockDocTypes, next_cursor: null })
   })
 
   it('renders wireframe copy, table headers, and all 3 request statuses', async () => {
-    vi.mocked(requestsApi.listRequests).mockResolvedValue({ items: mockRequests, next_cursor: null })
+    vi.mocked(requestsApi.listRequests).mockResolvedValue({ count: mockRequests.length, items: mockRequests, next_cursor: null })
 
     renderWithProviders(
       <MemoryRouter>
@@ -89,7 +89,7 @@ describe('MyRequestsScreen', () => {
   })
 
   it('shows empty state when no requests exist', async () => {
-    vi.mocked(requestsApi.listRequests).mockResolvedValue({ items: [], next_cursor: null })
+    vi.mocked(requestsApi.listRequests).mockResolvedValue({ count: 0, items: [], next_cursor: null })
 
     renderWithProviders(
       <MemoryRouter>
@@ -116,8 +116,8 @@ describe('MyRequestsScreen', () => {
 
   it('handles pagination via Load more button when next_cursor is present', async () => {
     vi.mocked(requestsApi.listRequests)
-      .mockResolvedValueOnce({ items: [mockRequests[0]], next_cursor: 'cursor-page-2' })
-      .mockResolvedValueOnce({ items: [mockRequests[1]], next_cursor: null })
+      .mockResolvedValueOnce({ count: 1, items: [mockRequests[0]], next_cursor: 'cursor-page-2' })
+      .mockResolvedValueOnce({ count: 1, items: [mockRequests[1]], next_cursor: null })
 
     renderWithProviders(
       <MemoryRouter>
