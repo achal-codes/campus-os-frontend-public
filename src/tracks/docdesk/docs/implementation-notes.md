@@ -59,3 +59,23 @@
   - `RequesterGuard`: Allows `student`, `faculty`, and `office_staff`. Redirects `admin` directly to `/tracks/docdesk/admin`.
   - `StudentAffairsGuard`: Waits for profile hydration (`/users/me`), verifies `role === 'office_staff'` and `isStudentAffairs(dept)`.
   - `AdminGuard`: Checks `role === 'admin'`. Never blocks on profile hydration.
+
+
+---
+
+## 4. UI/UX Transformation & Phase Baseline Audit (Phase 1 Gate)
+- **Baseline Test Suite Status**:
+  - `npm run lint`: 0 warnings, 0 errors across 141 files.
+  - `npm run typecheck`: clean (`tsc -b`).
+  - `npm run test:track docdesk`: 5 test files, 33/33 tests passed.
+  - `npm test`: 13 test files, 66/66 tests passed.
+  - `npm run build`: built in 343ms.
+  - `npm run test:e2e`: 33/33 Playwright tests passed.
+- **Protected Paths Inspected**:
+  - `boundaries.test.ts` enforces that tracks only import from `@/ui`, `@/theme`, `@/core`, npm packages, and their own track folder (`src/tracks/docdesk/`).
+  - All shared core modules (`src/app/`, `src/core/`, `src/ui/`, `src/theme/`, `src/features/`) are strictly protected and untouched.
+- **Design Upgrade Objectives**:
+  - Global horizontal top glass toolbar (`DocDeskTopbar`) replacing sidebar navigation.
+  - Premium glassmorphism design tokens (`glass.module.css`) with WCAG AA compliance and `@supports not (backdrop-filter)` fallback.
+  - Implementation of all 8 complete wireframe screens, including dedicated Screen 8 for Bulk TAT (`BulkTATScreen.tsx`).
+  - Preservation and glass-restyling of supporting dashboards (Requester, Student Affairs, and Admin).

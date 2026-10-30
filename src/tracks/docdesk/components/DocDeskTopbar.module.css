@@ -1,0 +1,309 @@
+/* DocDesk Global Top Toolbar */
+
+.topbarWrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 24px 0 rgba(112, 60, 200, 0.06);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+:global([data-theme='dark']) .topbarWrapper {
+  background: rgba(22, 23, 29, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 28px 0 rgba(0, 0, 0, 0.45);
+}
+
+.topbarContainer {
+  max-width: 1360px;
+  height: 66px;
+  margin: 0 auto;
+  padding: 0 var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* Brand */
+.brandGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.brandGlyph {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(170, 59, 255, 0.2) 0%, rgba(99, 102, 241, 0.3) 100%);
+  border: 1px solid rgba(170, 59, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 10px rgba(170, 59, 255, 0.15);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.brandContext {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Nav links (Center) */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 860px) {
+  .navLinks {
+    display: none;
+  }
+}
+
+.navItem {
+  display: inline-flex;
+}
+
+.navLink {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLink:hover {
+  color: var(--color-text);
+  background: rgba(170, 59, 255, 0.08);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.navLinkActive {
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  font-weight: 600;
+  border: 1px solid rgba(170, 59, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(170, 59, 255, 0.12);
+}
+
+/* Right Section */
+.actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(170, 59, 255, 0.12);
+  color: var(--color-primary);
+  border: 1px solid rgba(170, 59, 255, 0.2);
+}
+
+.roleBadgeAdmin {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.roleBadgeStaff {
+  background: linear-gradient(135deg, rgba(170, 59, 255, 0.15), rgba(99, 102, 241, 0.15));
+  color: var(--color-primary);
+  border: 1px solid rgba(170, 59, 255, 0.25);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 640px) {
+  .userInfo,
+  .roleBadge {
+    display: none;
+  }
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.userEmail {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.iconButton {
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.15s ease;
+}
+
+:global([data-theme='dark']) .iconButton {
+  background: rgba(36, 38, 48, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.iconButton:hover {
+  background: rgba(170, 59, 255, 0.1);
+  border-color: var(--color-primary);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Mobile Hamburger Toggle */
+.mobileMenuToggle {
+  display: none;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--color-text);
+  font-size: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  .mobileMenuToggle {
+    display: inline-flex;
+  }
+}
+
+/* Mobile Drawer Overlay */
+.mobileDrawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mobileDrawer {
+  width: 85%;
+  max-width: 320px;
+  height: 100%;
+  background: var(--color-surface);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5);
+  gap: var(--space-4);
+  box-sizing: border-box;
+}
+
+.mobileDrawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobileNavLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mobileNavLink {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.mobileNavLinkActive {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.mobileDrawerFooter {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

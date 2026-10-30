@@ -1,0 +1,188 @@
+/* DocDesk Premium Glassmorphism Theme Layer */
+
+.glassContainer {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(circle at 10% 10%, rgba(170, 59, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(138, 34, 224, 0.04) 0%, transparent 60%);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+}
+
+:global([data-theme='dark']) .glassContainer {
+  background-image:
+    radial-gradient(circle at 10% 10%, rgba(170, 59, 255, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(110, 20, 184, 0.08) 0%, transparent 60%);
+}
+
+/* Glass Panels & Surfaces */
+.glassPanel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px 0 rgba(112, 60, 200, 0.06), 0 2px 6px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 20px;
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:global([data-theme='dark']) .glassPanel {
+  background: rgba(31, 32, 40, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45), 0 1px 2px 0 rgba(255, 255, 255, 0.03);
+}
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  padding: var(--space-5);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global([data-theme='dark']) .glassCard {
+  background: rgba(36, 38, 48, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.35);
+}
+
+.glassCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px 0 rgba(112, 60, 200, 0.1);
+  border-color: rgba(170, 59, 255, 0.4);
+}
+
+:global([data-theme='dark']) .glassCard:hover {
+  box-shadow: 0 14px 32px 0 rgba(0, 0, 0, 0.5);
+  border-color: rgba(170, 59, 255, 0.3);
+}
+
+/* Glass Inputs & Controls */
+.glassInput,
+.glassSelect,
+.glassTextarea {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:global([data-theme='dark']) .glassInput,
+:global([data-theme='dark']) .glassSelect,
+:global([data-theme='dark']) .glassTextarea {
+  background: rgba(31, 32, 40, 0.6);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.glassInput:focus,
+.glassSelect:focus,
+.glassTextarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(170, 59, 255, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:global([data-theme='dark']) .glassInput:focus,
+:global([data-theme='dark']) .glassSelect:focus,
+:global([data-theme='dark']) .glassTextarea:focus {
+  background: rgba(31, 32, 40, 0.85);
+}
+
+/* Glass Tables */
+.glassTableContainer {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:global([data-theme='dark']) .glassTableContainer {
+  background: rgba(26, 27, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glassTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.glassTable th {
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+:global([data-theme='dark']) .glassTable th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.glassTable td {
+  padding: 16px 18px;
+  font-size: 0.9375rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: background-color 0.15s ease;
+}
+
+:global([data-theme='dark']) .glassTable td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.glassTable tr:last-child td {
+  border-bottom: none;
+}
+
+.glassTable tbody tr:hover td {
+  background: rgba(170, 59, 255, 0.04);
+}
+
+:global([data-theme='dark']) .glassTable tbody tr:hover td {
+  background: rgba(170, 59, 255, 0.08);
+}
+
+/* Fallback for non-supporting browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .glassPanel,
+  .glassCard,
+  .glassTableContainer {
+    background: var(--color-surface);
+  }
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glassCard,
+  .glassPanel,
+  .glassInput,
+  .glassSelect,
+  .glassTextarea,
+  .glassTable td {
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -1,0 +1,14 @@
+.mainContent {
+  flex: 1;
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-8);
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .mainContent {
+    padding: var(--space-4) var(--space-3) var(--space-7);
+  }
+}
