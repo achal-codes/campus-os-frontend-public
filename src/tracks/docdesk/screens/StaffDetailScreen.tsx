@@ -131,7 +131,19 @@ export function StaffDetailScreen() {
     }
   }
 
+  const isScholarship = Boolean(
+    request?.doc_type_name?.toLowerCase().includes('scholarship') ||
+    request?.doc_type_id?.toLowerCase().includes('scholarship'),
+  )
+
   function getPresentationState(): string {
+    if (isScholarship) {
+      if (request!.status === 'pending') return 'Scholarship Stage 1 (Reviewing & preparing application form)'
+      if (request!.status === 'acknowledged') return 'Scholarship Completed & Acknowledged'
+      if (request!.filled_form) return 'Scholarship Stage 2 (Student application package received — ready for final processing)'
+      if (request!.document) return 'Scholarship Stage 1 (Instructions & form sent — awaiting student package)'
+      return 'Scholarship (Answered — awaiting student action)'
+    }
     if (request!.status === 'pending') return 'Pending (awaiting officer response)'
     if (request!.status === 'acknowledged') return 'Acknowledged (closed & completed)'
     if (request!.filled_form) return 'Answered (requester submitted filled form)'
@@ -200,7 +212,7 @@ export function StaffDetailScreen() {
                     }}
                     data-testid="edit-answer-button"
                   >
-                    Edit Message
+                    {isScholarship && request.filled_form ? 'Complete Processing / Final Decision' : 'Edit Message'}
                   </Button>
                   <Button
                     variant="danger"
@@ -216,6 +228,19 @@ export function StaffDetailScreen() {
             </div>
           </div>
         </div>
+
+        {/* Scholarship Guidance Banners (§6) */}
+        {isScholarship && request.status === 'pending' && (
+          <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', padding: '12px 16px', borderRadius: 8, fontSize: '13px', color: '#3730a3' }}>
+            <strong>Scholarship Processing Guidance:</strong> Reply with the official scholarship instructions and attach the application form or checklist. Attaching the document is required to enable the student to upload their completed scholarship package in Stage 2.
+          </div>
+        )}
+
+        {isScholarship && request.status === 'answered' && request.filled_form && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 16px', borderRadius: 8, fontSize: '13px', color: '#166534' }}>
+            <strong>Student Package Received:</strong> The applicant has submitted their combined scholarship package. Download it below for review. Once processed, click &ldquo;Complete Processing / Final Decision&rdquo; to send the final outcome and optional award letter.
+          </div>
+        )}
 
         {/* 3-Step Lifecycle Progress Strip */}
         <LifecycleStrip status={request.status} />

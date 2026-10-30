@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useAuth } from '@/core/auth'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { createRequest } from '../api/requests'
@@ -9,6 +10,7 @@ import type { DocType } from '../types'
 import styles from './RequestFormScreen.module.css'
 
 export function RequestFormScreen() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedDocTypeId = searchParams.get('doc_type_id') ?? ''
@@ -59,6 +61,23 @@ export function RequestFormScreen() {
       active = false
     }
   }, [selectedDocTypeId])
+
+  if (user && user.role !== 'student') {
+    return (
+      <DocDeskLayout>
+        <div style={{ padding: '24px', maxWidth: 600, margin: '40px auto' }}>
+          <Alert tone="info">
+            Document requesting is a student-only capability. Your current role is <strong>{user.role}</strong>.
+          </Alert>
+          <div style={{ marginTop: '16px' }}>
+            <Link to="/tracks/docdesk/my-requests">
+              <Button variant="secondary">View Requests</Button>
+            </Link>
+          </div>
+        </div>
+      </DocDeskLayout>
+    )
+  }
 
   const selectedDocType = docTypes.find((d) => d.doc_type_id === selectedDocTypeId)
 

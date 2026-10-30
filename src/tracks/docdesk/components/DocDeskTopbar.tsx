@@ -39,11 +39,22 @@ export function DocDeskTopbar() {
       { label: 'Requests', to: '/tracks/docdesk/staff', end: true, testId: 'nav-docdesk-staff' },
       { label: 'Document Types', to: '/tracks/docdesk/staff/doc-types', testId: 'nav-docdesk-doctypes' },
     ]
-  } else {
-    roleTitle = 'DocDesk Requester'
+  } else if (user?.role === 'student') {
+    roleTitle = 'DocDesk Student'
+    roleDisplay = 'Student'
     navItems = [
       { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
       { label: 'New Request', to: '/tracks/docdesk/new', testId: 'nav-docdesk-new' },
+      { label: 'Document Catalog', to: '/tracks/docdesk/catalogue', testId: 'nav-docdesk-catalogue' },
+      { label: 'Scholarship', to: '/tracks/docdesk/scholarship', testId: 'nav-docdesk-scholarship' },
+    ]
+  } else {
+    // Faculty and Other Office Staff — DocDesk requesting is a student-only capability (§5)
+    roleTitle = 'DocDesk Portal'
+    roleDisplay = user?.role === 'faculty' ? 'Faculty' : 'Office Staff'
+    navItems = [
+      { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
+      { label: 'Document Catalog', to: '/tracks/docdesk/catalogue', testId: 'nav-docdesk-catalogue' },
     ]
   }
 

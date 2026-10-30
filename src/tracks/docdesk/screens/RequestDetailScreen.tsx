@@ -159,6 +159,10 @@ export function RequestDetailScreen() {
 
   const isPending = request.status === 'pending'
   const isAnsweredOrAck = request.status === 'answered' || request.status === 'acknowledged'
+  const isScholarship = Boolean(
+    request.doc_type_name?.toLowerCase().includes('scholarship') ||
+    request.doc_type_id.toLowerCase().includes('scholarship'),
+  )
 
   return (
     <DocDeskLayout>
@@ -215,6 +219,19 @@ export function RequestDetailScreen() {
         />
 
         {error && <Alert tone="danger">{error}</Alert>}
+
+        {/* Scholarship Guidance Banners (§6) */}
+        {isPending && isScholarship && (
+          <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', padding: '12px 16px', borderRadius: 8, fontSize: '13px', color: '#3730a3' }}>
+            <strong>Scholarship Stage 1:</strong> Your request has been submitted to Student Affairs. Once reviewed, Student Affairs will attach the official scholarship application form and instructions. Document package uploads will unlock in Stage 2 once the form is attached.
+          </div>
+        )}
+
+        {isAnsweredOrAck && isScholarship && request.filled_form && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 16px', borderRadius: 8, fontSize: '13px', color: '#166534' }}>
+            <strong>Scholarship Package Received:</strong> Your combined application package has been uploaded and submitted for Student Affairs review. See the official processing response below.
+          </div>
+        )}
 
         {/* SCREEN 3: Pending Request Details */}
         {isPending && (

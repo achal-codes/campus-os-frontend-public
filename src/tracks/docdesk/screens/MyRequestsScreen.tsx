@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { useAuth } from '@/core/auth'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { listRequests } from '../api/requests'
@@ -20,6 +21,7 @@ const STATUS_OPTIONS = [
 ]
 
 export function MyRequestsScreen() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [statusFilter, setStatusFilter] = useState<string>(() => searchParams.get('status') ?? '')
   const [docTypeFilter, setDocTypeFilter] = useState<string>(() => searchParams.get('doc_type_id') ?? '')
@@ -143,11 +145,13 @@ export function MyRequestsScreen() {
             <p className={styles.subtitle}>Track the status of your document requests.</p>
           </div>
 
-          <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
-            <Button variant="primary" size="md" data-testid="new-request-button">
-              New request
-            </Button>
-          </Link>
+          {user?.role === 'student' && (
+            <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
+              <Button variant="primary" size="md" data-testid="new-request-button">
+                New request
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Stat Cards (§3.9 / §4.0) */}
