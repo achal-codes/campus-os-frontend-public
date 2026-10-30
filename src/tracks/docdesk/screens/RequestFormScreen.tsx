@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
-import { Alert, Button, Card, SelectField, Spinner, Stack, Text, TextField } from '@/ui'
+import { Link, useNavigate, useSearchParams } from 'react-router'
+import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { createRequest } from '../api/requests'
-import { DocDeskNav } from '../components/DocDeskNav'
+import { DocDeskTopbar } from '../components/DocDeskTopbar'
+import glassStyles from '../theme/glass.module.css'
 import type { DocType } from '../types'
 import styles from './RequestFormScreen.module.css'
 
@@ -23,7 +24,7 @@ export function RequestFormScreen() {
     let active = true
     async function loadCatalogue() {
       try {
-        const res = await listDocTypes()
+        const res = await listDocTypes({ status: 'active', limit: 100 })
         if (active) {
           const activeOnly = res.items.filter((d) => d.status === 'active')
           setDocTypes(activeOnly)
@@ -45,6 +46,8 @@ export function RequestFormScreen() {
     }
   }, [selectedDocTypeId])
 
+  const selectedDocType = docTypes.find((d) => d.doc_type_id === selectedDocTypeId)
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
 
@@ -53,7 +56,8 @@ export function RequestFormScreen() {
       return
     }
 
-    if (reason.trim().length < 5 || reason.trim().length > 1000) {
+    const trimmedReason = reason.trim()
+    if (trimmedReason.length < 5 || trimmedReason.length > 1000) {
       setError('Please provide a reason between 5 and 1000 characters.')
       return
     }
@@ -63,7 +67,7 @@ export function RequestFormScreen() {
     try {
       const created = await createRequest({
         doc_type_id: selectedDocTypeId,
-        reason: reason.trim(),
+        reason: trimmedReason,
       })
       navigate(`/tracks/docdesk/requests/${created.request_id}`)
     } catch (err) {
@@ -73,81 +77,110 @@ export function RequestFormScreen() {
     }
   }
 
-  const options = docTypes.map((dt) => ({
-    value: dt.doc_type_id,
-    label: dt.name,
-  }))
-
   return (
-    <Stack gap={6} className={styles.container} data-testid="docdesk-request-form-screen">
-      <DocDeskNav />
+    <div className={glassStyles.glassContainer}>
+      <DocDeskTopbar />
 
-      <Stack gap={1}>
-        <Text as="h1" size="2xl" weight="bold">
-          Submit Document Request
-        </Text>
-        <Text tone="textMuted">
-          Requests are reviewed and processed by the Student Affairs department.
-        </Text>
-      </Stack>
+      <main className={styles.pageContainer} data-testid="docdesk-request-form-screen">
+        <div className={`${glassStyles.glassPanel} ${styles.formCard}`}>
+          {/* Header */}
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Request a Document</h1>
+            <p className={styles.subtitle}>Choose the document you need and explain why you need it.</p>
+          </div>
 
-      <Card>
-        {loadingDocTypes ? (
-          <Stack gap={3} style={{ padding: 'var(--space-6)', alignItems: 'center' }}>
-            <Spinner label="Loading document catalogue..." />
-          </Stack>
-        ) : (
-          <form onSubmit={handleSubmit} noValidate>
-            <Stack gap={4}>
-              {error && <Alert tone="danger" data-testid="request-form-error">{error}</Alert>}
+          {error && <Alert tone="danger">{error}</Alert>}
 
-              {docTypes.length === 0 ? (
-                <Alert tone="info">
-                  No active document types are available to request. Please contact Student Affairs.
-                </Alert>
-              ) : (
-                <>
-                  <SelectField
-                    label="Select Document Type"
-                    value={selectedDocTypeId}
-                    options={options}
-                    onChange={(e) => setSelectedDocTypeId(e.target.value)}
-                    required
-                    data-testid="request-doc-type-select"
-                  />
+          {loadingDocTypes ? (
+            <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+              <Spinner label="Loading document types..." />
+            </div>
+          ) : docTypes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+              <Text size="md" weight="medium">
+                No active document types available
+              </Text>
+              <Text size="sm" tone="textMuted" style={{ marginTop: 'var(--space-2)' }}>
+                Please contact the Student Affairs department to add document types before requesting.
+              </Text>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className={styles.form} noValidate>
+              {/* Document Type Selection */}
+              <div className={styles.fieldGroup}>
+                <label htmlFor="doctype-select" className={styles.fieldLabel}>
+                  <span>
+                    Document Type<span className={styles.requiredMark}>*</span>
+                  </span>
+                </label>
+                <select
+                  id="doctype-select"
+                  className={glassStyles.glassSelect}
+                  value={selectedDocTypeId}
+                  onChange={(e) => setSelectedDocTypeId(e.target.value)}
+                  required
+                  data-testid="doctype-select"
+                >
+                  {docTypes.map((dt) => (
+                    <option key={dt.doc_type_id} value={dt.doc_type_id}>
+                      {dt.name}
+                    </option>
+                  ))}
+                </select>
 
-                  <TextField
-                    label="Purpose / Detailed Reason"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    required
-                    hint="Explain clearly why you need this document (5 - 1000 characters)."
-                    data-testid="request-reason-input"
-                  />
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate('/tracks/docdesk')}
-                      type="button"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      loading={submitting}
-                      disabled={docTypes.length === 0}
-                      data-testid="submit-request-button"
-                    >
-                      Submit Request
-                    </Button>
+                {selectedDocType?.description && (
+                  <div className={styles.typeDescription}>
+                    ℹ️ {selectedDocType.description}
                   </div>
-                </>
-              )}
-            </Stack>
-          </form>
-        )}
-      </Card>
-    </Stack>
+                )}
+              </div>
+
+              {/* Reason Multiline Textarea */}
+              <div className={styles.fieldGroup}>
+                <div className={styles.fieldLabel}>
+                  <label htmlFor="reason-textarea">
+                    Reason for Request<span className={styles.requiredMark}>*</span>
+                  </label>
+                  <span className={styles.charCounter} aria-live="polite">
+                    {reason.length} / 1000 characters
+                  </span>
+                </div>
+                <textarea
+                  id="reason-textarea"
+                  className={glassStyles.glassTextarea}
+                  rows={5}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Explain why you require this document (e.g. scholarship application, passport renewal, visa clearance)..."
+                  required
+                  minLength={5}
+                  maxLength={1000}
+                  data-testid="request-reason-input"
+                />
+              </div>
+
+              {/* Form Action Controls */}
+              <div className={styles.actionsRow}>
+                <Link to="/tracks/docdesk/my-requests" style={{ textDecoration: 'none' }}>
+                  <Button type="button" variant="secondary" size="md">
+                    Cancel
+                  </Button>
+                </Link>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  loading={submitting}
+                  disabled={submitting || reason.trim().length < 5}
+                  data-testid="submit-request-button"
+                >
+                  Submit Request
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </main>
+    </div>
   )
 }
