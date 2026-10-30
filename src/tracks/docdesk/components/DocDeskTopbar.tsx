@@ -48,8 +48,6 @@ export function DocDeskTopbar() {
     navItems = [
       { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
       { label: 'New Request', to: '/tracks/docdesk/new', testId: 'nav-docdesk-new' },
-      { label: 'Dashboard', to: '/tracks/docdesk', end: true, testId: 'nav-docdesk-home' },
-      { label: 'Catalogue', to: '/tracks/docdesk/catalogue', testId: 'nav-docdesk-catalogue' },
     ]
   }
 
@@ -148,8 +146,8 @@ export function DocDeskTopbar() {
             type="button"
             className={styles.iconButton}
             onClick={handleSignOut}
-            aria-label="Sign out"
-            title="Sign out of CampusOS"
+            aria-label="Logout"
+            title="Logout"
           >
             🚪
           </button>
@@ -244,7 +242,7 @@ export function DocDeskTopbar() {
                   }}
                   onClick={handleSignOut}
                 >
-                  Sign out
+                  Logout
                 </button>
               </div>
             </div>

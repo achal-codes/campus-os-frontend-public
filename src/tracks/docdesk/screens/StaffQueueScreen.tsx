@@ -16,7 +16,6 @@ const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
   { value: 'answered', label: 'Answered' },
   { value: 'acknowledged', label: 'Acknowledged' },
-  { value: 'withdrawn', label: 'Withdrawn' },
 ]
 
 const SCOPE_OPTIONS = [
@@ -231,7 +230,7 @@ export function StaffQueueScreen() {
             {/* Search Input */}
             <div style={{ minWidth: 200, flex: 1.2 }}>
               <TextField
-                label="Search requests"
+                label="Search loaded requests"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ID, requester, note..."
