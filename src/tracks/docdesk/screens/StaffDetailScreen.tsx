@@ -274,7 +274,7 @@ export function StaffDetailScreen() {
                 <div className={styles.fileCallout}>
                   <Stack gap={1}>
                     <Text size="sm" weight="bold">
-                      📝 Requester Submission: {request.filled_form.filename}
+                      Requester Submission: {request.filled_form.filename}
                     </Text>
                     <Text size="xs" tone="textMuted">
                       {formatFileSize(request.filled_form.size_bytes)} ({request.filled_form.content_type})
@@ -418,7 +418,7 @@ export function StaffDetailScreen() {
                     <div className={styles.fileCallout}>
                       <Stack gap={1}>
                         <Text size="sm" weight="bold">
-                          📎 Attached Document: {request.document.filename}
+                          Attached Document: {request.document.filename}
                         </Text>
                         <Text size="xs" tone="textMuted">
                           {formatFileSize(request.document.size_bytes)} ({request.document.content_type})

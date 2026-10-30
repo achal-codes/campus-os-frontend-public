@@ -1,123 +1,123 @@
-/* DocDesk Premium Glassmorphism Theme Layer */
+/* DocDesk Wireframe Clean Theme Layer
+ * Style mandate: keep the wireframes' plain, simple look
+ * One accent colour (#4338ca), no gradients, no glass, no emoji icons.
+ */
+
+:root {
+  --accent: #4338ca;
+  --accent-dark: #3730a3;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --bg: #ffffff;
+  --bg-soft: #f8fafc;
+  --danger: #dc2626;
+  --st-pending: #b45309;
+  --st-answered: #1d4ed8;
+  --st-acked: #15803d;
+  --overdue: #dc2626;
+}
 
 .glassContainer {
   min-height: 100vh;
-  background-color: var(--color-bg);
-  background-image:
-    radial-gradient(circle at 10% 10%, rgba(170, 59, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(138, 34, 224, 0.04) 0%, transparent 60%);
-  color: var(--color-text);
+  background-color: var(--bg);
+  color: var(--ink);
   display: flex;
   flex-direction: column;
 }
 
 :global([data-theme='dark']) .glassContainer {
-  background-image:
-    radial-gradient(circle at 10% 10%, rgba(170, 59, 255, 0.15) 0%, transparent 45%),
-    radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(110, 20, 184, 0.08) 0%, transparent 60%);
+  background-color: #0f172a;
+  color: #f8fafc;
 }
 
-/* Glass Panels & Surfaces */
+/* Plain Wireframe Panels & Surfaces (no blur, 1px border) */
 .glassPanel {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 10px 30px 0 rgba(112, 60, 200, 0.06), 0 2px 6px 0 rgba(0, 0, 0, 0.03);
-  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   position: relative;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
 }
 
 :global([data-theme='dark']) .glassPanel {
-  background: rgba(31, 32, 40, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45), 0 1px 2px 0 rgba(255, 255, 255, 0.03);
+  background: #1e293b;
+  border: 1px solid #334155;
 }
 
 .glassCard {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.04);
-  border-radius: 16px;
-  padding: var(--space-5);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: none;
+  transition: border-color 0.15s ease;
 }
 
 :global([data-theme='dark']) .glassCard {
-  background: rgba(36, 38, 48, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.35);
+  background: #1e293b;
+  border: 1px solid #334155;
 }
 
 .glassCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px 0 rgba(112, 60, 200, 0.1);
-  border-color: rgba(170, 59, 255, 0.4);
+  border-color: #cbd5e1;
 }
 
 :global([data-theme='dark']) .glassCard:hover {
-  box-shadow: 0 14px 32px 0 rgba(0, 0, 0, 0.5);
-  border-color: rgba(170, 59, 255, 0.3);
+  border-color: #475569;
 }
 
-/* Glass Inputs & Controls */
+/* Plain Inputs & Controls */
 .glassInput,
 .glassSelect,
 .glassTextarea {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 0.9375rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
   line-height: 1.5;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 :global([data-theme='dark']) .glassInput,
 :global([data-theme='dark']) .glassSelect,
 :global([data-theme='dark']) .glassTextarea {
-  background: rgba(31, 32, 40, 0.6);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
 }
 
 .glassInput:focus,
 .glassSelect:focus,
 .glassTextarea:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(170, 59, 255, 0.25);
-  background: rgba(255, 255, 255, 0.85);
+  border-color: #4338ca;
+  box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.15);
 }
 
 :global([data-theme='dark']) .glassInput:focus,
 :global([data-theme='dark']) .glassSelect:focus,
 :global([data-theme='dark']) .glassTextarea:focus {
-  background: rgba(31, 32, 40, 0.85);
+  border-color: #818cf8;
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25);
 }
 
-/* Glass Tables */
+/* Plain Tables (Muted header row, 1px dividers, row hover) */
 .glassTableContainer {
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 :global([data-theme='dark']) .glassTableContainer {
-  background: rgba(26, 27, 34, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1e293b;
+  border-color: #334155;
 }
 
 .glassTable {
@@ -127,30 +127,29 @@
 }
 
 .glassTable th {
-  padding: 14px 18px;
+  padding: 12px 16px;
   font-weight: 600;
-  font-size: 0.8125rem;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.3);
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
   position: sticky;
   top: 0;
   z-index: 2;
 }
 
 :global([data-theme='dark']) .glassTable th {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid #334155;
+  background: #0f172a;
+  color: #94a3b8;
 }
 
 .tableLoadingOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,18 +158,20 @@
 }
 
 :global([data-theme='dark']) .tableLoadingOverlay {
-  background: rgba(20, 21, 26, 0.6);
+  background: rgba(15, 23, 42, 0.7);
 }
 
 .glassTable td {
-  padding: 16px 18px;
-  font-size: 0.9375rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
   transition: background-color 0.15s ease;
 }
 
 :global([data-theme='dark']) .glassTable td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid #334155;
+  color: #f8fafc;
 }
 
 .glassTable tr:last-child td {
@@ -178,20 +179,11 @@
 }
 
 .glassTable tbody tr:hover td {
-  background: rgba(170, 59, 255, 0.04);
+  background: #f8fafc;
 }
 
 :global([data-theme='dark']) .glassTable tbody tr:hover td {
-  background: rgba(170, 59, 255, 0.08);
-}
-
-/* Fallback for non-supporting browsers */
-@supports not (backdrop-filter: blur(1px)) {
-  .glassPanel,
-  .glassCard,
-  .glassTableContainer {
-    background: var(--color-surface);
-  }
+  background: #334155;
 }
 
 /* Accessibility: Reduced motion */

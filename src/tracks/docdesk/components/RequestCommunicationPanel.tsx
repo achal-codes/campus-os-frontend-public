@@ -62,7 +62,7 @@ export function RequestCommunicationPanel({ request }: RequestCommunicationPanel
               {request.document && (
                 <div style={{ marginTop: 'var(--space-2)' }}>
                   <Text size="xs" tone="primary">
-                    📎 Attached official document: {request.document.filename}
+                    Attached official document: {request.document.filename}
                   </Text>
                 </div>
               )}

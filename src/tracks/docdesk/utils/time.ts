@@ -31,15 +31,19 @@ export function formatDate(iso: string): string {
   }
 }
 
-/** Format a date-only string (YYYY-MM-DD) for display — no timezone shift */
+/** Format a date-only string (YYYY-MM-DD) or ISO timestamp for display — no timezone shift */
 export function formatDateOnly(dateStr: string): string {
   try {
-    const [y, m, d] = dateStr.split('-').map(Number)
+    const cleanDate = dateStr.includes('T') ? dateStr.slice(0, 10) : dateStr
+    const parts = cleanDate.split('-').map(Number)
+    if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+      return formatDate(dateStr)
+    }
     return new Intl.DateTimeFormat('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
-    }).format(new Date(y, m - 1, d))
+    }).format(new Date(parts[0], parts[1] - 1, parts[2]))
   } catch {
     return dateStr
   }

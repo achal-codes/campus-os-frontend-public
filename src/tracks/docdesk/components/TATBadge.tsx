@@ -13,21 +13,35 @@ export function TATBadge({ tat }: TATBadgeProps) {
   const style: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '4px',
-    fontSize: 'var(--text-xs)',
+    gap: '6px',
+    fontSize: '12px',
     padding: '2px 8px',
-    borderRadius: 'var(--radius-sm)',
+    borderRadius: '4px',
     border: '1px solid',
-    backgroundColor: overdue ? 'rgba(198, 40, 40, 0.1)' : 'var(--color-surface-muted)',
-    color: overdue ? 'var(--color-danger)' : 'var(--color-text-muted)',
-    borderColor: overdue ? 'var(--color-danger)' : 'var(--color-border)',
+    backgroundColor: overdue ? '#fee2e2' : '#f8fafc',
+    color: overdue ? '#dc2626' : '#64748b',
+    borderColor: overdue ? '#fca5a5' : '#e2e8f0',
+    fontWeight: overdue ? 600 : 400,
   }
 
   return (
     <span style={style} data-testid="docdesk-tat-badge" title={tat.note ?? undefined}>
-      <span>📅</span>
-      <span>{formatDateOnly(tat.expected_by)}</span>
-      {overdue && <span style={{ fontWeight: 'var(--weight-bold)' }}>(Overdue)</span>}
+      <span>Expected by {formatDateOnly(tat.expected_by)}</span>
+      {overdue && (
+        <span
+          style={{
+            backgroundColor: '#dc2626',
+            color: '#ffffff',
+            padding: '1px 5px',
+            borderRadius: '3px',
+            fontSize: '10px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+          }}
+        >
+          Overdue
+        </span>
+      )}
     </span>
   )
 }

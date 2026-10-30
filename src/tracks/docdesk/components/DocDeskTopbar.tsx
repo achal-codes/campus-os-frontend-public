@@ -21,22 +21,19 @@ export function DocDeskTopbar() {
 
   // Determine navigation items according to user role
   let navItems: Array<{ label: string, to: string, end?: boolean, testId: string }> = []
-  let roleLabel = 'Requester'
   let roleTitle = 'DocDesk Requester'
-  let roleBadgeClass = styles.roleBadge
+  let roleDisplay = user?.role === 'faculty' ? 'Faculty' : user?.role === 'office_staff' ? 'Office Staff' : 'Student'
 
   if (isAdmin) {
     roleTitle = 'DocDesk Admin'
-    roleLabel = 'Admin'
-    roleBadgeClass = `${styles.roleBadge} ${styles.roleBadgeAdmin}`
+    roleDisplay = 'Admin'
     navItems = [
       { label: 'Overview', to: '/tracks/docdesk/admin', end: true, testId: 'nav-docdesk-admin' },
       { label: 'Request Audit', to: '/tracks/docdesk/admin', testId: 'nav-docdesk-audit' },
     ]
   } else if (isStaff) {
     roleTitle = 'DocDesk Student Affairs'
-    roleLabel = 'Student Affairs'
-    roleBadgeClass = `${styles.roleBadge} ${styles.roleBadgeStaff}`
+    roleDisplay = 'Student Affairs'
     navItems = [
       { label: 'Dashboard', to: '/tracks/docdesk/staff/dashboard', testId: 'nav-docdesk-staff-dash' },
       { label: 'Requests', to: '/tracks/docdesk/staff', end: true, testId: 'nav-docdesk-staff' },
@@ -44,7 +41,6 @@ export function DocDeskTopbar() {
     ]
   } else {
     roleTitle = 'DocDesk Requester'
-    roleLabel = user?.role === 'faculty' ? 'Faculty' : user?.role === 'office_staff' ? 'Office Staff' : 'Student'
     navItems = [
       { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
       { label: 'New Request', to: '/tracks/docdesk/new', testId: 'nav-docdesk-new' },
@@ -86,24 +82,21 @@ export function DocDeskTopbar() {
   }
 
   return (
-    <header className={styles.topbarWrapper} role="banner" data-testid="docdesk-nav">
-      <div className={styles.topbarContainer}>
-        {/* Left: Brand */}
-        <Link to="/tracks/docdesk" className={styles.brandGroup} aria-label="DocDesk Home">
-          <div className={styles.brandGlyph} aria-hidden="true">
-            ◈
-          </div>
-          <div className={styles.brandText}>
-            <span className={styles.brandName}>{roleTitle}</span>
-            <span className={styles.brandContext}>CampusOS · Team 24</span>
-          </div>
-        </Link>
+    <aside className={styles.navContainer} data-testid="docdesk-nav">
+      {/* Desktop Left Sidebar */}
+      <div className={styles.sidebarShell}>
+        <div className={styles.brandHeader}>
+          <Link to="/tracks/docdesk" style={{ textDecoration: 'none' }}>
+            <div className={styles.brandName}>DocDesk</div>
+          </Link>
+          <div className={styles.roleLabel}>{roleTitle}</div>
+          <div style={{ fontSize: '11px', color: '#94a3b8' }}>{roleDisplay}</div>
+        </div>
 
-        {/* Center: Horizontal Top Navigation */}
-        <nav aria-label="Main Track Navigation">
-          <ul className={styles.navLinks}>
+        <nav className={styles.navSection} aria-label="DocDesk Sidebar Navigation">
+          <ul className={styles.navList}>
             {navItems.map((item) => (
-              <li key={item.to + item.label} className={styles.navItem}>
+              <li key={item.to + item.label}>
                 <NavLink
                   to={item.to}
                   end={item.end}
@@ -119,12 +112,7 @@ export function DocDeskTopbar() {
           </ul>
         </nav>
 
-        {/* Right: Role, Profile & Controls */}
-        <div className={styles.actionsGroup}>
-          <span className={roleBadgeClass} aria-label={`Current Role: ${roleLabel}`}>
-            {roleLabel}
-          </span>
-
+        <div className={styles.sidebarFooter}>
           {user && (
             <div className={styles.userInfo}>
               <span className={styles.userName}>{user.name || user.email.split('@')[0]}</span>
@@ -132,116 +120,101 @@ export function DocDeskTopbar() {
             </div>
           )}
 
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={toggleTheme}
-            aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Toggle theme (${mode})`}
-          >
-            {mode === 'dark' ? '☀️' : '🌙'}
-          </button>
+          <div className={styles.footerControls}>
+            <button
+              type="button"
+              className={styles.themeButton}
+              onClick={toggleTheme}
+              aria-label={`Toggle theme: current ${mode}`}
+            >
+              {mode === 'dark' ? 'Light mode' : 'Dark mode'}
+            </button>
 
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={handleSignOut}
-            aria-label="Logout"
-            title="Logout"
-          >
-            🚪
-          </button>
-
-          {/* Mobile hamburger menu toggle */}
-          <button
-            ref={menuButtonRef}
-            type="button"
-            className={styles.mobileMenuToggle}
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-expanded={mobileOpen}
-            aria-label="Open navigation menu"
-            data-testid="docdesk-menu-toggle"
-          >
-            ☰
-          </button>
+            <button
+              type="button"
+              className={styles.logoutButton}
+              onClick={handleSignOut}
+              aria-label="Logout"
+            >
+              Logout
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Mobile Bar (< 768px) */}
+      <div className={styles.mobileBar}>
+        <Link to="/tracks/docdesk" className={styles.mobileBrand}>
+          <span className={styles.brandName}>DocDesk</span>
+        </Link>
+
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className={styles.hamburgerBtn}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-expanded={mobileOpen}
+          aria-label="Open navigation menu"
+          data-testid="docdesk-menu-toggle"
+        >
+          Menu
+        </button>
       </div>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
         <div className={styles.mobileDrawerOverlay} role="dialog" aria-modal="true" aria-label="Navigation Menu">
           <div ref={drawerRef} className={styles.mobileDrawer}>
-            <div className={styles.mobileDrawerHeader}>
-              <div className={styles.brandText}>
-                <span className={styles.brandName}>DocDesk</span>
-                <span className={styles.brandContext}>{roleLabel}</span>
+            <div className={styles.brandHeader} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div className={styles.brandName}>DocDesk</div>
+                <div className={styles.roleLabel}>{roleTitle}</div>
               </div>
               <button
                 type="button"
-                className={styles.iconButton}
+                className={styles.hamburgerBtn}
                 onClick={() => {
                   setMobileOpen(false)
                   menuButtonRef.current?.focus()
                 }}
                 aria-label="Close navigation menu"
               >
-                ✕
+                Close
               </button>
             </div>
 
-            <ul className={styles.mobileNavLinks}>
-              {navItems.map((item) => (
-                <li key={'m-' + item.to + item.label}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }) =>
-                      isActive ? `${styles.mobileNavLink} ${styles.mobileNavLinkActive}` : styles.mobileNavLink
-                    }
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
+            <nav className={styles.navSection}>
+              <ul className={styles.navList}>
+                {navItems.map((item) => (
+                  <li key={'m-' + item.to + item.label}>
+                    <NavLink
+                      to={item.to}
+                      end={item.end}
+                      data-testid={`m-${item.testId}`}
+                      className={({ isActive }) =>
+                        isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+                      }
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {item.label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-            <div className={styles.mobileDrawerFooter}>
+            <div className={styles.sidebarFooter}>
               {user && (
-                <div style={{ fontSize: '0.875rem' }}>
-                  <div style={{ fontWeight: 600 }}>{user.name}</div>
-                  <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{user.email}</div>
+                <div className={styles.userInfo}>
+                  <span className={styles.userName}>{user.name}</span>
+                  <span className={styles.userEmail}>{user.email}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <button
-                  type="button"
-                  style={{
-                    flex: 1,
-                    minHeight: '44px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--color-border)',
-                    background: 'var(--color-surface)',
-                    color: 'var(--color-text)',
-                    cursor: 'pointer',
-                  }}
-                  onClick={toggleTheme}
-                >
-                  {mode === 'dark' ? '☀️ Light' : '🌙 Dark'}
+              <div className={styles.footerControls}>
+                <button type="button" className={styles.themeButton} onClick={toggleTheme}>
+                  {mode === 'dark' ? 'Light mode' : 'Dark mode'}
                 </button>
-                <button
-                  type="button"
-                  style={{
-                    flex: 1,
-                    minHeight: '44px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--color-border)',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    color: 'var(--color-danger)',
-                    cursor: 'pointer',
-                  }}
-                  onClick={handleSignOut}
-                >
+                <button type="button" className={styles.logoutButton} onClick={handleSignOut}>
                   Logout
                 </button>
               </div>
@@ -249,6 +222,6 @@ export function DocDeskTopbar() {
           </div>
         </div>
       )}
-    </header>
+    </aside>
   )
 }

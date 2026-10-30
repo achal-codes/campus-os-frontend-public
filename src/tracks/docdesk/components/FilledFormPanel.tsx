@@ -24,6 +24,7 @@ export function FilledFormPanel({
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -42,30 +43,16 @@ export function FilledFormPanel({
 
   const [isDragging, setIsDragging] = useState(false)
 
-  async function processUpload(file: File) {
+  function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
     const validation = validateFilledForm(file)
     if (!validation.valid) {
       setError(validation.error ?? 'Invalid file')
       return
     }
-
     setError(null)
-    setUploading(true)
-    try {
-      await uploadFilledForm(request.request_id, file)
-      onUpdated()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload filled form')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  async function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    await processUpload(file)
-    e.target.value = ''
+    setSelectedFile(file)
   }
 
   function handleDrop(e: DragEvent) {
@@ -74,7 +61,28 @@ export function FilledFormPanel({
     if (!canUpload) return
     const file = e.dataTransfer.files?.[0]
     if (file) {
-      processUpload(file)
+      const validation = validateFilledForm(file)
+      if (!validation.valid) {
+        setError(validation.error ?? 'Invalid file')
+        return
+      }
+      setError(null)
+      setSelectedFile(file)
+    }
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) return
+    setError(null)
+    setUploading(true)
+    try {
+      await uploadFilledForm(request.request_id, selectedFile)
+      setSelectedFile(null)
+      onUpdated()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload filled form')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -91,7 +99,7 @@ export function FilledFormPanel({
   }
 
   async function handleDelete() {
-    if (!window.confirm('Are you sure you want to delete this submitted filled form?')) return
+    if (!window.confirm('Remove your filled form? This cannot be undone.')) return
 
     setError(null)
     setDeleting(true)
@@ -109,21 +117,22 @@ export function FilledFormPanel({
     <div className={styles.container} data-testid="filled-form-panel">
       <Stack gap={3}>
         <Stack gap={1}>
-          <Text as="h3" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <Text as="h3" size="sm" weight="bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#0f172a' }}>
             OPTIONAL: FILLED-IN FORM (ONLY IF STAFF ATTACHED A DOCUMENT)
           </Text>
           <Text size="xs" tone="textMuted">
-            Choose completed PDF / DOCX / JPEG / PNG (max 10 MB). If already uploaded: Download or Remove (before acknowledgement).
+            Choose completed PDF / DOCX / JPEG / PNG (max 10 MB)
           </Text>
         </Stack>
 
         {error && <Alert tone="danger">{error}</Alert>}
 
+        {/* Existing uploaded form */}
         {request.filled_form ? (
           <div className={styles.fileInfo}>
             <Stack gap={1}>
               <Text size="sm" weight="bold">
-                📄 {request.filled_form.filename}
+                {request.filled_form.filename}
               </Text>
               <Text size="xs" tone="textMuted">
                 {formatFileSize(request.filled_form.size_bytes)} ({request.filled_form.content_type})
@@ -153,54 +162,46 @@ export function FilledFormPanel({
                   Remove
                 </Button>
               )}
-              {canUpload && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    loading={uploading}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Replace
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={FILLED_FORM_ACCEPT}
-                    onChange={handleFileSelect}
-                    style={{ display: 'none' }}
-                    data-testid="replace-filled-form-input"
-                  />
-                </>
-              )}
             </div>
           </div>
         ) : (
-          <Stack gap={2}>
-            {canUpload && (
+          canUpload && (
+            <Stack gap={2}>
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
                 className={`${styles.dropzone} ${isDragging ? styles.dropzoneActive : ''}`}
               >
-                <Stack gap={2} style={{ alignItems: 'center' }}>
-                  <Text size="xs" tone="textMuted">
-                    Drag and drop your completed form here, or
-                  </Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <Button
                     size="sm"
-                    variant="primary"
-                    loading={uploading}
+                    variant="secondary"
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    data-testid="upload-filled-form-button"
+                    data-testid="choose-file-button"
                   >
-                    Browse Files
+                    Choose file
                   </Button>
-                  <Text size="xs" tone="textMuted">
-                    Accepted: PDF, DOCX, JPEG, PNG (max 10 MB)
-                  </Text>
-                </Stack>
+
+                  {selectedFile ? (
+                    <span style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <strong>{selectedFile.name}</strong> ({formatFileSize(selectedFile.size)})
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFile(null)}
+                        style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        Remove
+                      </button>
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      No file chosen
+                    </span>
+                  )}
+                </div>
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -210,11 +211,25 @@ export function FilledFormPanel({
                   data-testid="upload-filled-form-input"
                 />
               </div>
-            )}
-          </Stack>
+
+              {selectedFile && (
+                <div>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    loading={uploading}
+                    onClick={handleUpload}
+                    data-testid="upload-filled-form-button"
+                  >
+                    Upload Form
+                  </Button>
+                </div>
+              )}
+            </Stack>
+          )
         )}
 
-        <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic', marginTop: 'var(--space-1)' }}>
+        <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic', marginTop: '4px' }}>
           After upload: you can download or remove your filled form before acknowledgement. After acknowledgement: view/download only; no further upload, removal or acknowledgement.
         </Text>
       </Stack>

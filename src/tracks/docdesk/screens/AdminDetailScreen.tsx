@@ -206,7 +206,7 @@ export function AdminDetailScreen() {
                 <div className={styles.fileCallout}>
                   <Stack gap={1}>
                     <Text size="sm" weight="bold">
-                      📎 Attached Document: {request.document.filename}
+                      Attached Document: {request.document.filename}
                     </Text>
                     <Text size="xs" tone="textMuted">
                       {formatFileSize(request.document.size_bytes)} ({request.document.content_type})
@@ -239,7 +239,7 @@ export function AdminDetailScreen() {
               <div className={styles.fileCallout}>
                 <Stack gap={1}>
                   <Text size="sm" weight="bold">
-                    📝 {request.filled_form.filename}
+                    {request.filled_form.filename}
                   </Text>
                   <Text size="xs" tone="textMuted">
                     {formatFileSize(request.filled_form.size_bytes)} ({request.filled_form.content_type})

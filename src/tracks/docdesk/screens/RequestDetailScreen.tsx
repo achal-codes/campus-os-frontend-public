@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '@/core/auth'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { acknowledgeRequest, downloadDocument, getRequest, withdrawRequest } from '../api/requests'
-import { DocDeskTopbar } from '../components/DocDeskTopbar'
+import { DocDeskLayout } from '../components/DocDeskLayout'
 import { EditRequestModal } from '../components/EditRequestModal'
 import { FilledFormPanel } from '../components/FilledFormPanel'
 import { LifecycleStrip } from '../components/LifecycleStrip'
@@ -76,28 +76,26 @@ export function RequestDetailScreen() {
 
   if (loading) {
     return (
-      <div className={glassStyles.glassContainer}>
-        <DocDeskTopbar />
-        <main className={styles.container} style={{ padding: 'var(--space-8) var(--space-5)', textAlign: 'center' }} data-testid="docdesk-request-detail-screen">
+      <DocDeskLayout>
+        <div style={{ padding: '48px', textAlign: 'center' }} data-testid="docdesk-request-detail-screen">
           <Spinner label="Loading request details..." />
-        </main>
-      </div>
+        </div>
+      </DocDeskLayout>
     )
   }
 
   if (error || !request) {
     return (
-      <div className={glassStyles.glassContainer}>
-        <DocDeskTopbar />
-        <main className={styles.container} style={{ padding: 'var(--space-6) var(--space-5)' }} data-testid="docdesk-request-detail-screen">
+      <DocDeskLayout>
+        <div style={{ padding: '24px' }} data-testid="docdesk-request-detail-screen">
           <Alert tone="danger">{error ?? 'Request not found'}</Alert>
-          <div style={{ marginTop: 'var(--space-4)' }}>
+          <div style={{ marginTop: '16px' }}>
             <Button variant="secondary" onClick={() => navigate('/tracks/docdesk/my-requests')}>
               Back to My Requests
             </Button>
           </div>
-        </main>
-      </div>
+        </div>
+      </DocDeskLayout>
     )
   }
 
@@ -129,7 +127,7 @@ export function RequestDetailScreen() {
   }
 
   async function handleWithdraw() {
-    if (!window.confirm('Are you sure you want to withdraw this pending request? This action cannot be undone.')) {
+    if (!window.confirm('Withdraw this request? This cannot be undone.')) {
       return
     }
 
@@ -144,7 +142,7 @@ export function RequestDetailScreen() {
   }
 
   async function handleAcknowledge() {
-    if (!window.confirm('Acknowledge that you have received the official resolution/document for this request?')) {
+    if (!window.confirm("Acknowledge receipt? You won't be able to upload or change anything after this.")) {
       return
     }
 
@@ -163,11 +161,9 @@ export function RequestDetailScreen() {
   const isAnsweredOrAck = request.status === 'answered' || request.status === 'acknowledged'
 
   return (
-    <div className={glassStyles.glassContainer}>
-      <DocDeskTopbar />
-
-      <main className={styles.container} style={{ padding: 'var(--space-6) var(--space-5)' }} data-testid="docdesk-request-detail-screen">
-        {/* Header Bar with Breadcrumb and Title */}
+    <DocDeskLayout>
+      <div className={styles.container} data-testid="docdesk-request-detail-screen">
+        {/* Header Bar with Breadcrumb and Title (§4.2 / §4.3) */}
         <div className={`${glassStyles.glassPanel} ${styles.headerBar}`}>
           <div className={styles.titleArea}>
             <div className={styles.breadcrumb}>
@@ -187,7 +183,7 @@ export function RequestDetailScreen() {
                 title="Copy Request ID"
                 aria-label="Copy Request ID"
               >
-                📋 {request.request_id} {copied ? '✓ Copied' : ''}
+                {request.request_id} {copied ? '(Copied)' : '(Copy)'}
               </button>
             </div>
             <p className={styles.subtitle}>
@@ -204,14 +200,19 @@ export function RequestDetailScreen() {
                 loading={acknowledging}
                 data-testid="acknowledge-request-button"
               >
-                Acknowledge receipt
+                Acknowledge
               </Button>
             )}
           </div>
         </div>
 
-        {/* 3-Step Lifecycle Strip */}
-        <LifecycleStrip status={request.status} />
+        {/* 3-Step Progress Map (§3.8) */}
+        <LifecycleStrip
+          status={request.status}
+          submittedAt={request.created_at}
+          answeredAt={request.answer?.answered_at}
+          tat={request.tat}
+        />
 
         {error && <Alert tone="danger">{error}</Alert>}
 
@@ -232,7 +233,7 @@ export function RequestDetailScreen() {
                     <span className={styles.metaValue}>{request.doc_type_name ?? request.doc_type_id}</span>
                   </div>
                   <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Submitted date</span>
+                    <span className={styles.metaLabel}>Submitted on</span>
                     <span className={styles.metaValue}>{formatDateTime(request.created_at)}</span>
                   </div>
                   <div className={styles.metaItem}>
@@ -251,7 +252,7 @@ export function RequestDetailScreen() {
               <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
                 <div className={styles.overline}>TURNAROUND TIME (IF SET)</div>
                 {request.tat ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div className={styles.metaItem}>
                       <span className={styles.metaLabel}>Expected by</span>
                       <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -264,14 +265,14 @@ export function RequestDetailScreen() {
                     {request.tat.note && (
                       <div className={styles.metaItem}>
                         <span className={styles.metaLabel}>Staff note</span>
-                        <div className={styles.reasonBox} style={{ background: 'rgba(99, 102, 241, 0.04)' }}>
+                        <div className={styles.reasonBox} style={{ background: '#f8fafc' }}>
                           {request.tat.note}
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
                     <Text size="sm">No turnaround time has been assigned yet.</Text>
                     <Text size="xs" style={{ marginTop: 6, fontStyle: 'italic' }}>
                       TAT is optional and is set by Student Affairs while the request is pending.
@@ -284,7 +285,7 @@ export function RequestDetailScreen() {
             {/* Overline 3: AVAILABLE REQUESTER ACTIONS */}
             <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
               <div className={styles.overline}>AVAILABLE REQUESTER ACTIONS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div className={styles.actionRow}>
                   <p className={styles.actionDesc}>Edit request: change document type and/or reason.</p>
                   <Button
@@ -349,7 +350,7 @@ export function RequestDetailScreen() {
               <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
                 <div className={styles.overline}>STUDENT AFFAIRS RESPONSE</div>
                 {request.answer ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div className={styles.metaGrid}>
                       {request.answer.answered_by_name && (
                         <div className={styles.metaItem}>
@@ -381,11 +382,11 @@ export function RequestDetailScreen() {
               <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
                 <div className={styles.overline}>DOCUMENT FROM STAFF</div>
                 {request.document ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div className={styles.metaItem}>
                       <span className={styles.metaLabel}>Document file</span>
                       <span className={styles.metaValue} style={{ fontWeight: 600 }}>{request.document.filename}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>
                         {formatFileSize(request.document.size_bytes)} • {request.document.content_type}
                       </span>
                     </div>
@@ -405,16 +406,16 @@ export function RequestDetailScreen() {
                     )}
                   </div>
                 ) : (
-                  <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
                     <Text size="sm">No official document attached to this answer.</Text>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Filled-Form Round Trip Panel (Visible only when staff attached a document) */}
+            {/* Filled-Form Round Trip Panel (§4.3 — only if staff attached a document) */}
             {request.document && (
-              <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-5)' }}>
+              <div className={glassStyles.glassPanel} style={{ padding: '20px' }}>
                 <FilledFormPanel
                   request={request}
                   isOwner={request.requested_by === user?.email}
@@ -424,11 +425,18 @@ export function RequestDetailScreen() {
                 />
               </div>
             )}
+
+            {/* Acknowledged status helper message (§4.4) */}
+            {request.status === 'acknowledged' && (
+              <div style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', padding: '12px' }}>
+                This request is closed.
+              </div>
+            )}
           </>
         )}
 
         {/* Official Request Timeline Panel */}
-        <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-5)' }}>
+        <div className={glassStyles.glassPanel} style={{ padding: '20px' }}>
           <RequestCommunicationPanel request={request} />
         </div>
 
@@ -443,7 +451,7 @@ export function RequestDetailScreen() {
             }}
           />
         )}
-      </main>
-    </div>
+      </div>
+    </DocDeskLayout>
   )
 }

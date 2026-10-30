@@ -4,6 +4,7 @@ import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { listRequests } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
+import { LifecycleStrip } from '../components/LifecycleStrip'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
 import glassStyles from '../theme/glass.module.css'
@@ -125,11 +126,17 @@ export function MyRequestsScreen() {
 
   const activeDocTypeName = docTypes.find((d) => d.doc_type_id === docTypeFilter)?.name
   const isFiltered = Boolean(statusFilter || docTypeFilter)
+  const latestRequest = items.length > 0 ? items[0] : null
+
+  // Stat card counts computed dynamically (§3.9)
+  const pendingCount = items.filter((i) => i.status === 'pending').length
+  const answeredCount = items.filter((i) => i.status === 'answered').length
+  const ackedCount = items.filter((i) => i.status === 'acknowledged').length
 
   return (
     <DocDeskLayout activeItem="my-requests">
       <div className={styles.container} data-testid="docdesk-my-requests-screen">
-        {/* Header */}
+        {/* Header (§4.0 / Wireframe 1) */}
         <div className={styles.headerRow}>
           <div className={styles.headerText}>
             <h1 className={styles.title}>My requests</h1>
@@ -143,8 +150,59 @@ export function MyRequestsScreen() {
           </Link>
         </div>
 
-        {/* Filter Glass Panel */}
-        <div className={`${glassStyles.glassPanel} ${styles.filterPanel}`}>
+        {/* Stat Cards (§3.9 / §4.0) */}
+        <div className={styles.statCardsRow}>
+          <button
+            type="button"
+            className={`${styles.statCard} ${statusFilter === 'pending' ? styles.statCardActive : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'pending' ? '' : 'pending')}
+            aria-label="Filter by Pending status"
+          >
+            <div className={styles.statCardTitle}>Pending</div>
+            <div className={styles.statCardValue}>{loading ? '—' : pendingCount}</div>
+            <div className={styles.statCardSubtitle}>awaiting staff reply</div>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.statCard} ${statusFilter === 'answered' ? styles.statCardActive : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'answered' ? '' : 'answered')}
+            aria-label="Filter by Answered status"
+          >
+            <div className={styles.statCardTitle}>Answered</div>
+            <div className={styles.statCardValue}>{loading ? '—' : answeredCount}</div>
+            <div className={styles.statCardSubtitle}>action needed</div>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.statCard} ${statusFilter === 'acknowledged' ? styles.statCardActive : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'acknowledged' ? '' : 'acknowledged')}
+            aria-label="Filter by Acknowledged status"
+          >
+            <div className={styles.statCardTitle}>Acknowledged</div>
+            <div className={styles.statCardValue}>{loading ? '—' : ackedCount}</div>
+            <div className={styles.statCardSubtitle}>completed</div>
+          </button>
+        </div>
+
+        {/* Latest Request Mini Progress Map (§3.8 / §4.0) */}
+        {latestRequest && !isFiltered && (
+          <div className={styles.miniMapCard} data-testid="latest-request-mini-map">
+            <div className={styles.miniMapHeader}>
+              Latest: <strong>Request #{latestRequest.request_id}</strong> · {latestRequest.doc_type_name ?? latestRequest.doc_type_id}
+            </div>
+            <LifecycleStrip
+              status={latestRequest.status}
+              submittedAt={latestRequest.created_at}
+              answeredAt={latestRequest.answer?.answered_at}
+              tat={latestRequest.tat}
+            />
+          </div>
+        )}
+
+        {/* Filter Panel (§3.6) */}
+        <div className={styles.filterPanel}>
           <h2 className={styles.filterHeading}>Filter requests</h2>
           <div className={styles.filterControls}>
             <div className={styles.filterGroup}>
@@ -233,20 +291,20 @@ export function MyRequestsScreen() {
 
         {/* Loading / Empty / Content */}
         {loading ? (
-          <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={glassStyles.glassPanel} style={{ padding: '32px', textAlign: 'center' }}>
             <Spinner label="Loading your requests..." />
           </div>
         ) : items.length === 0 ? (
-          <div className={glassStyles.glassPanel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={glassStyles.glassPanel} style={{ padding: '32px', textAlign: 'center' }}>
             <Text as="h3" size="md" weight="medium">
               {isFiltered ? 'No requests match these filters' : "No requests found. Click 'New request' to get started."}
             </Text>
-            <Text size="sm" tone="textMuted" style={{ marginTop: 'var(--space-2)' }}>
+            <Text size="sm" tone="textMuted" style={{ marginTop: '8px' }}>
               {isFiltered
                 ? 'Try resetting the filters to view all your document requests.'
                 : 'Submit your bonafide certificates, transcripts, or official letters.'}
             </Text>
-            <div style={{ marginTop: 'var(--space-4)' }}>
+            <div style={{ marginTop: '16px' }}>
               {isFiltered ? (
                 <Button variant="secondary" size="sm" onClick={clearFilters}>
                   Clear filters
@@ -267,7 +325,7 @@ export function MyRequestsScreen() {
               <table className={glassStyles.glassTable} aria-label="My Requests Table">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>Request ID</th>
                     <th>Document type</th>
                     <th>Status</th>
                     <th>TAT</th>
@@ -290,7 +348,7 @@ export function MyRequestsScreen() {
                             title="Copy Request ID"
                             aria-label={`Copy request ID ${r.request_id}`}
                           >
-                            {copiedId === r.request_id ? '✓' : '📋'}
+                            {copiedId === r.request_id ? '✓' : 'Copy'}
                           </button>
                         </div>
                       </td>
@@ -323,7 +381,7 @@ export function MyRequestsScreen() {
               </table>
             </div>
 
-            {/* User-facing helper text */}
+            {/* User-facing helper text (§3.5) */}
             <div className={styles.helperText}>
               Select View to open a request's details.
             </div>
@@ -331,7 +389,7 @@ export function MyRequestsScreen() {
             {/* Mobile Card-Based View */}
             <div className={styles.mobileCardsContainer}>
               {items.map((r) => (
-                <div key={'m-' + r.request_id} className={`${glassStyles.glassCard} ${styles.mobileCard}`}>
+                <div key={'m-' + r.request_id} className={styles.mobileCard}>
                   <div className={styles.mobileCardHeader}>
                     <div>
                       <div className={styles.idCell}>
@@ -345,7 +403,7 @@ export function MyRequestsScreen() {
                           title="Copy Request ID"
                           aria-label={`Copy request ID ${r.request_id}`}
                         >
-                          {copiedId === r.request_id ? '✓' : '📋'}
+                          {copiedId === r.request_id ? '✓' : 'Copy'}
                         </button>
                       </div>
                       <Text size="sm" weight="bold" style={{ display: 'block', marginTop: 4 }}>
@@ -382,7 +440,7 @@ export function MyRequestsScreen() {
               ))}
             </div>
 
-            {/* Pagination Controls */}
+            {/* Pagination Controls (§3.5) */}
             <div className={styles.paginationRow}>
               <Text size="xs" tone="textMuted">
                 Showing {items.length} loaded records

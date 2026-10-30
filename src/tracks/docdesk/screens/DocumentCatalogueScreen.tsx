@@ -75,7 +75,7 @@ export function DocumentCatalogueScreen() {
                 <Stack gap={3} style={{ height: '100%' }}>
                   <Stack gap={1}>
                     <Text as="h3" size="md" weight="bold">
-                      📄 {dt.name}
+                      {dt.name}
                     </Text>
                     <Text size="xs" tone="textMuted">
                       Catalog Code: {dt.doc_type_id}

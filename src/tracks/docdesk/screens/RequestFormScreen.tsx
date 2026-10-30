@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { createRequest } from '../api/requests'
-import { DocDeskTopbar } from '../components/DocDeskTopbar'
+import { DocDeskLayout } from '../components/DocDeskLayout'
 import glassStyles from '../theme/glass.module.css'
 import type { DocType } from '../types'
 import styles from './RequestFormScreen.module.css'
@@ -84,20 +84,22 @@ export function RequestFormScreen() {
         reason: trimmedReason,
       })
       navigate(`/tracks/docdesk/requests/${created.request_id}`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit document request')
+    } catch (err: any) {
+      if (err?.code === 'DOC_TYPE_ARCHIVED' || err?.status === 409) {
+        setError('That document type is no longer available. Please choose another.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to submit document request')
+      }
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <div className={glassStyles.glassContainer}>
-      <DocDeskTopbar />
-
-      <main className={styles.pageContainer} data-testid="docdesk-request-form-screen">
+    <DocDeskLayout activeItem="new">
+      <div className={styles.pageContainer} data-testid="docdesk-request-form-screen">
         <div className={`${glassStyles.glassPanel} ${styles.formCard}`}>
-          {/* Header */}
+          {/* Header (§4.1 / Wireframe 2) */}
           <div className={styles.headerText}>
             <h1 className={styles.title}>Request a document</h1>
             <p className={styles.subtitle}>Submit a request for bonafide certificates, transcripts, or official letters.</p>
@@ -106,15 +108,15 @@ export function RequestFormScreen() {
           {error && <Alert tone="danger">{error}</Alert>}
 
           {loadingDocTypes ? (
-            <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+            <div style={{ textAlign: 'center', padding: '24px' }}>
               <Spinner label="Loading document types..." />
             </div>
           ) : docTypes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+            <div style={{ textAlign: 'center', padding: '24px' }}>
               <Text size="md" weight="medium">
                 No active document types available
               </Text>
-              <Text size="sm" tone="textMuted" style={{ marginTop: 'var(--space-2)' }}>
+              <Text size="sm" tone="textMuted" style={{ marginTop: '8px' }}>
                 Please contact the Student Affairs department to add document types before requesting.
               </Text>
             </div>
@@ -151,7 +153,7 @@ export function RequestFormScreen() {
 
                 {selectedDocType?.description && (
                   <div className={styles.typeDescription}>
-                    ℹ️ {selectedDocType.description}
+                    {selectedDocType.description}
                   </div>
                 )}
               </div>
@@ -170,7 +172,7 @@ export function RequestFormScreen() {
                     }`}
                     aria-live="polite"
                   >
-                    {reason.length} / 1000
+                    ({reason.length}/1000)
                   </span>
                 </div>
                 <textarea
@@ -214,13 +216,13 @@ export function RequestFormScreen() {
                   disabled={submitting || reason.trim().length < 5}
                   data-testid="submit-request-button"
                 >
-                  Submit request
+                  Submit Request
                 </Button>
               </div>
             </form>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </DocDeskLayout>
   )
 }
