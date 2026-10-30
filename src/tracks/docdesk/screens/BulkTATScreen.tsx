@@ -30,6 +30,7 @@ export function BulkTATScreen() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [failedIds, setFailedIds] = useState<string[]>([])
 
   useEffect(() => {
     let active = true
@@ -108,12 +109,24 @@ export function BulkTATScreen() {
       setTimeout(() => {
         navigate('/tracks/docdesk/staff')
       }, 1500)
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? `No requests were updated: ${err.message}`
-          : 'No requests were updated. If any selected request is invalid or no longer pending, none are updated.'
-      )
+    } catch (err: unknown) {
+      let failed: string[] = []
+      if (err && typeof err === 'object') {
+        const anyErr = err as { code?: string; details?: { request_ids?: string[] } }
+        if (Array.isArray(anyErr.details?.request_ids)) {
+          failed = anyErr.details.request_ids
+        }
+      }
+      setFailedIds(failed)
+      if (failed.length > 0) {
+        setError(`No requests were updated. The following ${failed.length} request(s) are no longer pending or not found: ${failed.join(', ')}.`)
+      } else {
+        setError(
+          err instanceof Error
+            ? `No requests were updated: ${err.message}`
+            : 'No requests were updated. If any selected request is invalid or no longer pending, none are updated.'
+        )
+      }
       setSubmitting(false)
     }
   }
@@ -144,7 +157,32 @@ export function BulkTATScreen() {
           </div>
         </div>
 
-        {error && <Alert tone="danger">{error}</Alert>}
+        {error && (
+          <Alert tone="danger">
+            <Stack gap={2}>
+              <div>{error}</div>
+              {failedIds.length > 0 && (
+                <div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev)
+                        for (const fid of failedIds) next.delete(fid)
+                        return next
+                      })
+                      setFailedIds([])
+                      setError(null)
+                    }}
+                  >
+                    Unselect Failed Requests ({failedIds.length})
+                  </Button>
+                </div>
+              )}
+            </Stack>
+          </Alert>
+        )}
         {success && <Alert tone="success">{success}</Alert>}
 
         {loading ? (

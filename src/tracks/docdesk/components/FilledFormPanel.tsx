@@ -43,21 +43,12 @@ export function FilledFormPanel({
 
   const [isDragging, setIsDragging] = useState(false)
 
-  const isScholarship = Boolean(
-    request.doc_type_name?.toLowerCase().includes('scholarship') ||
-    request.doc_type_id.toLowerCase().includes('scholarship'),
-  )
-
   function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     const validation = validateFilledForm(file)
     if (!validation.valid) {
       setError(validation.error ?? 'Invalid file')
-      return
-    }
-    if (isScholarship && !file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.docx')) {
-      setError('Scholarship packages must be submitted as a single combined PDF or Word (.docx) document.')
       return
     }
     setError(null)
@@ -73,10 +64,6 @@ export function FilledFormPanel({
       const validation = validateFilledForm(file)
       if (!validation.valid) {
         setError(validation.error ?? 'Invalid file')
-        return
-      }
-      if (isScholarship && !file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.docx')) {
-        setError('Scholarship packages must be submitted as a single combined PDF or Word (.docx) document.')
         return
       }
       setError(null)
@@ -138,29 +125,13 @@ export function FilledFormPanel({
     <div className={styles.container} data-testid="filled-form-panel">
       <Stack gap={3}>
         <Stack gap={1}>
-          <Text as="h3" size="sm" weight="bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#0f172a' }}>
-            {isScholarship ? 'STAGE 2: UPLOAD SCHOLARSHIP APPLICATION PACKAGE' : 'OPTIONAL: FILLED-IN FORM (ONLY IF STAFF ATTACHED A DOCUMENT)'}
+          <Text as="h3" size="sm" weight="bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text)' }}>
+            OPTIONAL: FILLED-IN FORM (ONLY IF STAFF ATTACHED A DOCUMENT)
           </Text>
           <Text size="xs" tone="textMuted">
-            {isScholarship
-              ? 'Upload one combined PDF or Word (.docx) package containing your completed application form and all supporting documents (max 10 MB).'
-              : 'Choose completed PDF / DOCX / JPEG / PNG (max 10 MB)'}
+            Choose completed PDF / DOCX / JPEG / PNG (max 10 MB)
           </Text>
         </Stack>
-
-        {isScholarship && !request.filled_form && (
-          <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: '12px' }}>
-            <Text size="xs" weight="bold" style={{ color: '#0f172a', marginBottom: 4 }}>
-              Supporting Document Checklist:
-            </Text>
-            <ul style={{ margin: 0, paddingLeft: 18, color: '#475569', lineHeight: 1.6 }}>
-              <li>Aadhaar card or other accepted government identity proof</li>
-              <li>Official family income certificate</li>
-              <li>Previous academic-year marksheet</li>
-              <li>Completed scholarship form downloaded from Student Affairs response above</li>
-            </ul>
-          </div>
-        )}
 
         {error && <Alert tone="danger">{error}</Alert>}
 
@@ -227,13 +198,13 @@ export function FilledFormPanel({
                       <button
                         type="button"
                         onClick={() => setSelectedFile(null)}
-                        style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}
+                        style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', fontWeight: 600 }}
                       >
                         Remove
                       </button>
                     </span>
                   ) : (
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
                       No file chosen
                     </span>
                   )}
@@ -242,7 +213,7 @@ export function FilledFormPanel({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept={isScholarship ? '.pdf,.docx' : FILLED_FORM_ACCEPT}
+                  accept={FILLED_FORM_ACCEPT}
                   onChange={handleFileSelect}
                   style={{ display: 'none' }}
                   data-testid="upload-filled-form-input"

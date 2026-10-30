@@ -43,19 +43,6 @@ export const routes: RouteObject[] = [
     },
   },
   {
-    path: 'scholarship',
-    lazy: async () => {
-      const { ScholarshipRequestScreen } = await import('./screens/ScholarshipRequestScreen')
-      return {
-        Component: () => (
-          <RequesterGuard>
-            <ScholarshipRequestScreen />
-          </RequesterGuard>
-        ),
-      }
-    },
-  },
-  {
     path: 'my-requests',
     lazy: async () => {
       const { MyRequestsScreen } = await import('./screens/MyRequestsScreen')

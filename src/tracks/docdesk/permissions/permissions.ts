@@ -70,9 +70,8 @@ export function can(action: PermissionAction, ctx: PermissionContext): boolean {
   switch (action) {
     // --- Requests ---
     case 'request.create':
-      // Student-only capability (Master Prompt Section 5):
-      // "DocDesk document requesting is a student-only capability. Do not expose the student document-request action in faculty or office staff portals."
-      return role === 'student'
+      // Student, faculty, other office staff, and Student Affairs can all submit requests
+      return true
 
     case 'request.read.own':
       // All requesters can view their own document requests

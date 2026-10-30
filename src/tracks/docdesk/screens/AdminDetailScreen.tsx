@@ -113,7 +113,7 @@ export function AdminDetailScreen() {
                 fontSize: 'var(--text-xs)',
                 fontWeight: 'var(--weight-bold)',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                color: '#dc2626',
+                color: 'var(--color-danger)',
                 border: '1px solid rgba(239, 68, 68, 0.25)',
               }}
             >

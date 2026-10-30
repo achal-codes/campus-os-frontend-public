@@ -28,11 +28,24 @@ export function DocTypeManagerScreen() {
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
 
   async function loadData() {
-    setLoading(true)
     setError(null)
     try {
-      const res = await listDocTypes()
-      setTypes(res.items)
+      const [activeRes, archivedRes] = await Promise.allSettled([
+        listDocTypes({ status: 'active', limit: 100 }),
+        listDocTypes({ status: 'archived', limit: 100 }),
+      ])
+      const map = new Map<string, DocType>()
+      if (activeRes.status === 'fulfilled') {
+        for (const item of activeRes.value.items) map.set(item.doc_type_id, item)
+      }
+      if (archivedRes.status === 'fulfilled') {
+        for (const item of archivedRes.value.items) map.set(item.doc_type_id, item)
+      }
+      if (map.size === 0) {
+        const res = await listDocTypes()
+        for (const item of res.items) map.set(item.doc_type_id, item)
+      }
+      setTypes(Array.from(map.values()))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load document types')
     } finally {
@@ -42,17 +55,33 @@ export function DocTypeManagerScreen() {
 
   useEffect(() => {
     let active = true
-    async function init() {
-      try {
-        const res = await listDocTypes()
-        if (active) setTypes(res.items)
-      } catch (err) {
+    Promise.allSettled([
+      listDocTypes({ status: 'active', limit: 100 }),
+      listDocTypes({ status: 'archived', limit: 100 }),
+    ])
+      .then(([activeRes, archivedRes]) => {
+        if (!active) return
+        const map = new Map<string, DocType>()
+        if (activeRes.status === 'fulfilled') {
+          for (const item of activeRes.value.items) map.set(item.doc_type_id, item)
+        }
+        if (archivedRes.status === 'fulfilled') {
+          for (const item of archivedRes.value.items) map.set(item.doc_type_id, item)
+        }
+        if (map.size === 0) {
+          listDocTypes().then((res) => {
+            if (active) setTypes(res.items)
+          })
+        } else {
+          setTypes(Array.from(map.values()))
+        }
+      })
+      .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Failed to load document types')
-      } finally {
+      })
+      .finally(() => {
         if (active) setLoading(false)
-      }
-    }
-    init()
+      })
     return () => {
       active = false
     }
@@ -333,7 +362,7 @@ export function DocTypeManagerScreen() {
                                 fontSize: '0.75rem',
                                 fontWeight: 600,
                                 background: dt.status === 'active' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                                color: dt.status === 'active' ? '#22c55e' : '#9ca3af',
+                                color: dt.status === 'active' ? 'var(--color-success)' : 'var(--color-text-muted)',
                               }}
                             >
                               {dt.status === 'active' ? 'Active' : 'Archived'}

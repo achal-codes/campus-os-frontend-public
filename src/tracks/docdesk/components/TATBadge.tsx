@@ -18,9 +18,9 @@ export function TATBadge({ tat }: TATBadgeProps) {
     padding: '2px 8px',
     borderRadius: '4px',
     border: '1px solid',
-    backgroundColor: overdue ? '#fee2e2' : '#f8fafc',
-    color: overdue ? '#dc2626' : '#64748b',
-    borderColor: overdue ? '#fca5a5' : '#e2e8f0',
+    backgroundColor: overdue ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-surface-muted)',
+    color: overdue ? 'var(--color-danger)' : 'var(--color-text-muted)',
+    borderColor: overdue ? 'rgba(239, 68, 68, 0.35)' : 'var(--color-border)',
     fontWeight: overdue ? 600 : 400,
   }
 
@@ -30,8 +30,8 @@ export function TATBadge({ tat }: TATBadgeProps) {
       {overdue && (
         <span
           style={{
-            backgroundColor: '#dc2626',
-            color: '#ffffff',
+            backgroundColor: 'var(--color-danger)',
+            color: 'var(--color-on-primary)',
             padding: '1px 5px',
             borderRadius: '3px',
             fontSize: '10px',

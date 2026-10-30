@@ -14,7 +14,7 @@ import styles from './RequesterDashboardScreen.module.css'
 
 export function RequesterDashboardScreen() {
   const { user } = useAuth()
-  const { profile } = useProfile()
+  const { profile, isStudentAffairs } = useProfile()
   const [requests, setRequests] = useState<DocRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -75,6 +75,31 @@ export function RequesterDashboardScreen() {
             </Link>
           </div>
         </div>
+
+        {isStudentAffairs && (
+          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ borderLeft: '4px solid var(--color-primary)', padding: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+              <Stack gap={1}>
+                <Text size="md" weight="bold">Student Affairs Staff Operations</Text>
+                <Text size="sm" tone="textMuted">
+                  You are authorized as Student Affairs staff. Manage incoming student requests, set turnaround targets, and issue official documents.
+                </Text>
+              </Stack>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <Link to="/tracks/docdesk/staff" style={{ textDecoration: 'none' }}>
+                  <Button variant="primary" size="md">
+                    Open Staff Queue →
+                  </Button>
+                </Link>
+                <Link to="/tracks/docdesk/staff/dashboard" style={{ textDecoration: 'none' }}>
+                  <Button variant="secondary" size="md">
+                    Staff Operations Hub
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <Alert tone="danger" data-testid="dashboard-error">

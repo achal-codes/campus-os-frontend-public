@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
+import { Alert, Button, Card, SelectField, Stack, Text, TextField } from '@/ui'
+import { listDocTypes } from '../api/docTypes'
 import { editRequest } from '../api/requests'
-import type { DocRequest } from '../types'
+import type { DocRequest, DocType } from '../types'
 
 interface EditRequestModalProps {
   request: DocRequest
@@ -10,11 +11,31 @@ interface EditRequestModalProps {
 }
 
 export function EditRequestModal({ request, onClose, onSuccess }: EditRequestModalProps) {
+  const [docTypeId, setDocTypeId] = useState(request.doc_type_id)
+  const [docTypes, setDocTypes] = useState<DocType[]>([])
   const [reason, setReason] = useState(request.reason)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const isDirty = reason !== request.reason
+  const isDirty = reason !== request.reason || docTypeId !== request.doc_type_id
+
+  useEffect(() => {
+    let active = true
+    async function loadTypes() {
+      try {
+        const res = await listDocTypes({ status: 'active', limit: 100 })
+        if (active) {
+          setDocTypes(res.items)
+        }
+      } catch {
+        // Fallback to current type if types list fails
+      }
+    }
+    loadTypes()
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -44,7 +65,10 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
     setSubmitting(true)
     setError(null)
     try {
-      await editRequest(request.request_id, { reason: reason.trim() })
+      await editRequest(request.request_id, {
+        doc_type_id: docTypeId !== request.doc_type_id ? docTypeId : undefined,
+        reason: reason.trim(),
+      })
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update request')
@@ -52,6 +76,14 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
       setSubmitting(false)
     }
   }
+
+  // Build options list ensuring current request doc type is always present
+  const optionsMap = new Map<string, string>()
+  optionsMap.set(request.doc_type_id, request.doc_type_name ?? request.doc_type_id)
+  for (const dt of docTypes) {
+    optionsMap.set(dt.doc_type_id, dt.name)
+  }
+  const typeOptions = Array.from(optionsMap.entries()).map(([value, label]) => ({ value, label }))
 
   return (
     <div
@@ -78,12 +110,21 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
 
             {error && <Alert tone="danger">{error}</Alert>}
 
-            <TextField
-              label="Document Type"
-              value={request.doc_type_name ?? request.doc_type_id}
-              disabled
-              hint="Document type cannot be modified directly after submission."
-            />
+            {typeOptions.length > 1 ? (
+              <SelectField
+                label="Document Type"
+                value={docTypeId}
+                onChange={(e) => setDocTypeId(e.target.value)}
+                options={typeOptions}
+                data-testid="edit-request-doc-type"
+              />
+            ) : (
+              <TextField
+                label="Document Type"
+                value={request.doc_type_name ?? request.doc_type_id}
+                disabled
+              />
+            )}
 
             <TextField
               label="Reason for Request"

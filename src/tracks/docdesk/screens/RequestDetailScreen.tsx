@@ -43,7 +43,6 @@ export function RequestDetailScreen() {
 
   const loadData = useCallback(async () => {
     if (!id) return
-    setLoading(true)
     setError(null)
     try {
       const data = await getRequest(id)
@@ -57,18 +56,17 @@ export function RequestDetailScreen() {
 
   useEffect(() => {
     let active = true
-    async function init() {
-      if (!id) return
-      try {
-        const data = await getRequest(id)
+    if (!id) return
+    getRequest(id)
+      .then((data) => {
         if (active) setRequest(data)
-      } catch (err) {
+      })
+      .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Failed to load request')
-      } finally {
+      })
+      .finally(() => {
         if (active) setLoading(false)
-      }
-    }
-    init()
+      })
     return () => {
       active = false
     }
@@ -159,10 +157,6 @@ export function RequestDetailScreen() {
 
   const isPending = request.status === 'pending'
   const isAnsweredOrAck = request.status === 'answered' || request.status === 'acknowledged'
-  const isScholarship = Boolean(
-    request.doc_type_name?.toLowerCase().includes('scholarship') ||
-    request.doc_type_id.toLowerCase().includes('scholarship'),
-  )
 
   return (
     <DocDeskLayout>
@@ -220,19 +214,6 @@ export function RequestDetailScreen() {
 
         {error && <Alert tone="danger">{error}</Alert>}
 
-        {/* Scholarship Guidance Banners (§6) */}
-        {isPending && isScholarship && (
-          <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', padding: '12px 16px', borderRadius: 8, fontSize: '13px', color: '#3730a3' }}>
-            <strong>Scholarship Stage 1:</strong> Your request has been submitted to Student Affairs. Once reviewed, Student Affairs will attach the official scholarship application form and instructions. Document package uploads will unlock in Stage 2 once the form is attached.
-          </div>
-        )}
-
-        {isAnsweredOrAck && isScholarship && request.filled_form && (
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 16px', borderRadius: 8, fontSize: '13px', color: '#166534' }}>
-            <strong>Scholarship Package Received:</strong> Your combined application package has been uploaded and submitted for Student Affairs review. See the official processing response below.
-          </div>
-        )}
-
         {/* SCREEN 3: Pending Request Details */}
         {isPending && (
           <>
@@ -282,14 +263,14 @@ export function RequestDetailScreen() {
                     {request.tat.note && (
                       <div className={styles.metaItem}>
                         <span className={styles.metaLabel}>Staff note</span>
-                        <div className={styles.reasonBox} style={{ background: '#f8fafc' }}>
+                        <div className={styles.reasonBox} style={{ background: 'var(--color-surface-muted)' }}>
                           {request.tat.note}
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                     <Text size="sm">No turnaround time has been assigned yet.</Text>
                     <Text size="xs" style={{ marginTop: 6, fontStyle: 'italic' }}>
                       TAT is optional and is set by Student Affairs while the request is pending.
@@ -403,7 +384,7 @@ export function RequestDetailScreen() {
                     <div className={styles.metaItem}>
                       <span className={styles.metaLabel}>Document file</span>
                       <span className={styles.metaValue} style={{ fontWeight: 600 }}>{request.document.filename}</span>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
                         {formatFileSize(request.document.size_bytes)} • {request.document.content_type}
                       </span>
                     </div>
@@ -423,7 +404,7 @@ export function RequestDetailScreen() {
                     )}
                   </div>
                 ) : (
-                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                     <Text size="sm">No official document attached to this answer.</Text>
                   </div>
                 )}
@@ -445,7 +426,7 @@ export function RequestDetailScreen() {
 
             {/* Acknowledged status helper message (§4.4) */}
             {request.status === 'acknowledged' && (
-              <div style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', padding: '12px' }}>
+              <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '13px', padding: '12px' }}>
                 This request is closed.
               </div>
             )}

@@ -39,22 +39,11 @@ export function DocDeskTopbar() {
       { label: 'Requests', to: '/tracks/docdesk/staff', end: true, testId: 'nav-docdesk-staff' },
       { label: 'Document Types', to: '/tracks/docdesk/staff/doc-types', testId: 'nav-docdesk-doctypes' },
     ]
-  } else if (user?.role === 'student') {
-    roleTitle = 'DocDesk Student'
-    roleDisplay = 'Student'
+  } else {
+    roleTitle = 'DocDesk Requester'
     navItems = [
       { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
       { label: 'New Request', to: '/tracks/docdesk/new', testId: 'nav-docdesk-new' },
-      { label: 'Document Catalog', to: '/tracks/docdesk/catalogue', testId: 'nav-docdesk-catalogue' },
-      { label: 'Scholarship', to: '/tracks/docdesk/scholarship', testId: 'nav-docdesk-scholarship' },
-    ]
-  } else {
-    // Faculty and Other Office Staff — DocDesk requesting is a student-only capability (§5)
-    roleTitle = 'DocDesk Portal'
-    roleDisplay = user?.role === 'faculty' ? 'Faculty' : 'Office Staff'
-    navItems = [
-      { label: 'My Requests', to: '/tracks/docdesk/my-requests', testId: 'nav-docdesk-my-requests' },
-      { label: 'Document Catalog', to: '/tracks/docdesk/catalogue', testId: 'nav-docdesk-catalogue' },
     ]
   }
 
@@ -101,7 +90,7 @@ export function DocDeskTopbar() {
             <div className={styles.brandName}>DocDesk</div>
           </Link>
           <div className={styles.roleLabel}>{roleTitle}</div>
-          <div style={{ fontSize: '11px', color: '#94a3b8' }}>{roleDisplay}</div>
+          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{roleDisplay}</div>
         </div>
 
         <nav className={styles.navSection} aria-label="DocDesk Sidebar Navigation">

@@ -43,7 +43,13 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
       })
       onSuccess()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Bulk TAT assignment failed'
+      let msg = err instanceof Error ? err.message : 'Bulk TAT assignment failed'
+      if (err && typeof err === 'object') {
+        const anyErr = err as { details?: { request_ids?: string[] } }
+        if (Array.isArray(anyErr.details?.request_ids)) {
+          msg = `Failed: requests no longer pending: ${anyErr.details.request_ids.join(', ')}`
+        }
+      }
       setError(msg)
     } finally {
       setSubmitting(false)
