@@ -16,7 +16,7 @@ export function useProfile(): ProfileState {
   const { user } = useAuth()
   const needsProfile = Boolean(user && user.role !== 'admin')
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(needsProfile)
   const [error, setError] = useState<string | null>(null)
   const fetchedRef = useRef<string | null>(null)
 

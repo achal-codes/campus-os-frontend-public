@@ -22,13 +22,13 @@ export function RequesterGuard({ children }: GuardProps) {
 /** Strictly checks office_staff with Student Affairs department. Waits for profile hydration. */
 export function StudentAffairsGuard({ children }: GuardProps) {
   const { user } = useAuth()
-  const { loading, isStudentAffairs, error } = useProfile()
+  const { loading, isStudentAffairs, error, profile } = useProfile()
 
   if (user?.role !== 'office_staff') {
     return <Navigate to="/tracks/docdesk" replace />
   }
 
-  if (loading) {
+  if (loading || (profile === null && !error)) {
     return (
       <Stack gap={4} style={{ padding: 'var(--space-8)', alignItems: 'center' }}>
         <Spinner label="Verifying Student Affairs clearance..." />

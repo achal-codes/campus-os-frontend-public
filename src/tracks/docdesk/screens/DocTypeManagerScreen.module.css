@@ -6,21 +6,28 @@
 
 .twoColumnGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
+}
+
+.twoColumnGrid > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (min-width: 1024px) {
   .twoColumnGrid {
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: 380px minmax(0, 1fr);
     align-items: start;
   }
 }
 
 .tableWrapper {
   overflow-x: auto;
+  max-width: 100%;
   border-radius: var(--radius-md);
   margin-top: var(--space-3);
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
