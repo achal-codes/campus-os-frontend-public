@@ -3,9 +3,20 @@ import type { DocType, PaginatedResponse, CreateDocTypeBody, EditDocTypeBody } f
 
 const BASE = '/docdesk/doc-types'
 
-/** List all document types */
-export function listDocTypes(): Promise<PaginatedResponse<DocType>> {
-  return apiRequest<PaginatedResponse<DocType>>(BASE)
+export interface DocTypeFilters {
+  status?: 'active' | 'archived' | ''
+  limit?: number
+  cursor?: string
+}
+
+/** List document types with optional status and pagination */
+export function listDocTypes(filters: DocTypeFilters = {}): Promise<PaginatedResponse<DocType>> {
+  const params = new URLSearchParams()
+  if (filters.status) params.set('status', filters.status)
+  if (filters.limit) params.set('limit', String(filters.limit))
+  if (filters.cursor) params.set('cursor', filters.cursor)
+  const qs = params.toString()
+  return apiRequest<PaginatedResponse<DocType>>(`${BASE}${qs ? `?${qs}` : ''}`)
 }
 
 /** Get a single document type */

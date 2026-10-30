@@ -126,8 +126,14 @@ export function DocTypeManagerScreen() {
       }
       resetForm()
       await loadData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save document type')
+    } catch (err: any) {
+      if (err?.code === 'ALREADY_EXISTS' || err?.status === 409) {
+        setError('A document type with this name already exists.')
+      } else if (err?.status === 403) {
+        setError('Only Student Affairs staff are permitted to manage document types.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to save document type')
+      }
     } finally {
       setSubmitting(false)
     }
