@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { Alert, Button, Card, Spinner, Stack, Text } from '@/ui'
+import { Alert, Button, Spinner, Stack, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
-import { DocDeskNav } from '../components/DocDeskNav'
+import { DocDeskLayout } from '../components/DocDeskLayout'
+import glass from '../theme/glass.module.css'
 import type { DocType } from '../types'
 import styles from './DocumentCatalogueScreen.module.css'
 
@@ -37,70 +38,70 @@ export function DocumentCatalogueScreen() {
   }, [])
 
   return (
-    <Stack gap={6} data-testid="docdesk-catalogue-screen">
-      <DocDeskNav />
-
-      <Stack gap={1}>
-        <Text as="h1" size="2xl" weight="bold">
-          Document Catalogue
-        </Text>
-        <Text tone="textMuted">
-          Select an official institutional document to submit a request.
-        </Text>
-      </Stack>
-
-      {error && (
-        <Alert tone="danger" data-testid="catalogue-error">
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Stack gap={4} style={{ padding: 'var(--space-8)', alignItems: 'center' }}>
-          <Spinner label="Loading document types..." />
+    <DocDeskLayout activeItem="catalogue">
+      <Stack gap={6} data-testid="docdesk-catalogue-screen">
+        <Stack gap={1}>
+          <Text as="h1" size="2xl" weight="bold">
+            Institutional Document Catalogue
+          </Text>
+          <Text tone="textMuted">
+            Select an official institutional document to submit a request with official tracking.
+          </Text>
         </Stack>
-      ) : docTypes.length === 0 ? (
-        <Card>
-          <Stack gap={2} style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
-            <Text size="md" weight="medium">No document types currently available</Text>
-            <Text size="sm" tone="textMuted">
-              No active document types have been configured by Student Affairs.
-            </Text>
-          </Stack>
-        </Card>
-      ) : (
-        <div className={styles.grid}>
-          {docTypes.map((dt) => (
-            <Card key={dt.doc_type_id} className={styles.docCard} data-testid={`doctype-card-${dt.doc_type_id}`}>
-              <Stack gap={3}>
-                <Stack gap={1}>
-                  <Text as="h3" size="md" weight="bold">
-                    📄 {dt.name}
+
+        {error && (
+          <Alert tone="danger" data-testid="catalogue-error">
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+            <Spinner label="Loading document catalogue..." />
+          </div>
+        ) : docTypes.length === 0 ? (
+          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+            <Stack gap={2} style={{ alignItems: 'center' }}>
+              <Text size="md" weight="medium">No document types currently available</Text>
+              <Text size="sm" tone="textMuted">
+                No active document types have been configured by Student Affairs.
+              </Text>
+            </Stack>
+          </div>
+        ) : (
+          <div className={styles.grid}>
+            {docTypes.map((dt) => (
+              <div key={dt.doc_type_id} className={styles.docCard} data-testid={`doctype-card-${dt.doc_type_id}`}>
+                <Stack gap={3} style={{ height: '100%' }}>
+                  <Stack gap={1}>
+                    <Text as="h3" size="md" weight="bold">
+                      📄 {dt.name}
+                    </Text>
+                    <Text size="xs" tone="textMuted">
+                      Catalog Code: {dt.doc_type_id}
+                    </Text>
+                  </Stack>
+
+                  <Text size="sm" tone="textMuted" style={{ flexGrow: 1, lineHeight: 1.5 }}>
+                    {dt.description || 'Official institutional document template managed by Student Affairs.'}
                   </Text>
-                  <Text size="xs" tone="textMuted">
-                    ID: {dt.doc_type_id}
-                  </Text>
+
+                  <div style={{ marginTop: 'var(--space-3)' }}>
+                    <Link
+                      to={`/tracks/docdesk/new?doc_type_id=${encodeURIComponent(dt.doc_type_id)}`}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Button variant="primary" size="sm" fullWidth>
+                        Request This Document →
+                      </Button>
+                    </Link>
+                  </div>
                 </Stack>
-
-                <Text size="sm" tone="textMuted" style={{ flexGrow: 1 }}>
-                  {dt.description || 'Official institutional document.'}
-                </Text>
-
-                <div style={{ marginTop: 'var(--space-3)' }}>
-                  <Link
-                    to={`/tracks/docdesk/new?doc_type_id=${encodeURIComponent(dt.doc_type_id)}`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Button variant="secondary" size="sm" fullWidth>
-                      Request This Document
-                    </Button>
-                  </Link>
-                </div>
-              </Stack>
-            </Card>
-          ))}
-        </div>
-      )}
-    </Stack>
+              </div>
+            ))}
+          </div>
+        )}
+      </Stack>
+    </DocDeskLayout>
   )
 }
