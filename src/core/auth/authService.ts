@@ -32,7 +32,8 @@ async function loginUser(email_id: string, otp: string): Promise<TokenResponse> 
   try {
     return await apiRequest<TokenResponse>('/auth/login', { method: 'POST', json })
   } catch (error) {
-    if (error instanceof ApiError && error.code === 'USE_ADMIN_LOGIN') {
+    const code = error instanceof ApiError ? error.code : (error as { code?: string })?.code
+    if (code === 'USE_ADMIN_LOGIN') {
       // Automatic safe recovery: retry exactly ONCE against the admin endpoint
       return await apiRequest<TokenResponse>('/auth/admin/login', { method: 'POST', json })
     }
