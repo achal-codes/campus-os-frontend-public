@@ -37,6 +37,7 @@ export function DocDeskTopbar() {
     navItems = [
       { label: 'Dashboard', to: '/tracks/docdesk/staff/dashboard', testId: 'nav-docdesk-staff-dash' },
       { label: 'Requests', to: '/tracks/docdesk/staff', end: true, testId: 'nav-docdesk-staff' },
+      { label: 'Bulk TAT', to: '/tracks/docdesk/staff/bulk-tat', testId: 'nav-docdesk-bulk-tat' },
       { label: 'Document Types', to: '/tracks/docdesk/staff/doc-types', testId: 'nav-docdesk-doctypes' },
     ]
   } else {
