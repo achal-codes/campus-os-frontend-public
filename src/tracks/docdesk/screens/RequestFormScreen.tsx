@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import { ApiError } from '@/core/api'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { createRequest } from '../api/requests'
@@ -82,9 +83,13 @@ export function RequestFormScreen() {
         reason: trimmedReason,
       })
       navigate(`/tracks/docdesk/requests/${created.request_id}`)
-    } catch (err: any) {
-      if (err?.code === 'DOC_TYPE_ARCHIVED' || err?.status === 409) {
-        setError('That document type is no longer available. Please choose another.')
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.code === 'DOC_TYPE_ARCHIVED' || err.status === 409) {
+          setError('That document type is no longer available. Please choose another.')
+        } else {
+          setError(err.message || 'Failed to submit document request')
+        }
       } else {
         setError(err instanceof Error ? err.message : 'Failed to submit document request')
       }

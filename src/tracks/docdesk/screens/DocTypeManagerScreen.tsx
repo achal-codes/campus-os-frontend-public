@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { ApiError } from '@/core/api'
 import { Alert, Button, SelectField, Spinner, Stack, Text, TextField } from '@/ui'
 import {
   createDocType,
@@ -155,11 +156,15 @@ export function DocTypeManagerScreen() {
       }
       resetForm()
       await loadData()
-    } catch (err: any) {
-      if (err?.code === 'ALREADY_EXISTS' || err?.status === 409) {
-        setError('A document type with this name already exists.')
-      } else if (err?.status === 403) {
-        setError('Only Student Affairs staff are permitted to manage document types.')
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.code === 'ALREADY_EXISTS' || err.status === 409) {
+          setError('A document type with this name already exists.')
+        } else if (err.status === 403) {
+          setError('Only Student Affairs staff are permitted to manage document types.')
+        } else {
+          setError(err.message || 'Failed to save document type')
+        }
       } else {
         setError(err instanceof Error ? err.message : 'Failed to save document type')
       }

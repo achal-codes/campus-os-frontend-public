@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { ApiError } from '@/core/api'
 import { Alert, Button, Stack, Text } from '@/ui'
 import { deleteFilledForm, downloadFilledForm, uploadFilledForm } from '../api/requests'
 import { can } from '../permissions/permissions'
@@ -79,13 +80,17 @@ export function FilledFormPanel({
       await uploadFilledForm(request.request_id, selectedFile)
       setSelectedFile(null)
       onUpdated()
-    } catch (err: any) {
-      if (err?.code === 'NOT_ANSWERED') {
-        setError('Request is still pending. You can only upload a filled form once answered.')
-      } else if (err?.code === 'NO_DOCUMENT') {
-        setError('The answer does not contain an official document to fill.')
-      } else if (err?.code === 'ALREADY_ACKNOWLEDGED') {
-        setError('The request is already closed and cannot be modified.')
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.code === 'NOT_ANSWERED') {
+          setError('Request is still pending. You can only upload a filled form once answered.')
+        } else if (err.code === 'NO_DOCUMENT') {
+          setError('The answer does not contain an official document to fill.')
+        } else if (err.code === 'ALREADY_ACKNOWLEDGED') {
+          setError('The request is already closed and cannot be modified.')
+        } else {
+          setError(err.message || 'Failed to upload filled form')
+        }
       } else {
         setError(err instanceof Error ? err.message : 'Failed to upload filled form')
       }
