@@ -130,11 +130,13 @@ if (error instanceof ApiError && error.code === 'USE_ADMIN_LOGIN') {
 - If the follow-up request to `/api/v1/auth/admin/login` fails (e.g., returns 401 `INVALID_CREDENTIALS`), it is **not caught** by the retry block, preventing any recursive loops.
 - `loginAdmin()` does not catch or retry errors.
 
-### 3.3 Explicit Admin Mode
-The login page provides an explicit administrative mode:
-- Activated via URL parameter: `?mode=admin` or `?admin=true`.
-- Toggled via the UI button: `data-testid="toggle-admin-login"`.
-- When in admin mode, the client invokes `signIn(email, otp, { isAdmin: true })`, targeting `/api/v1/auth/admin/login` directly without an initial `/auth/login` request.
+### 3.3 Role-Blind Single Form (Amendment P7)
+Per principle P7, all role sign-in options ("Sign in as Administrator", "Sign in as Faculty", "Sign in as Student", and `toggle-admin-login`) have been removed from the UI:
+- The login page provides a single form and single submit path.
+- The user never chooses a role; the backend determines account type from credentials.
+- All users (Student, Faculty, Staff, and Admin) submit credentials via the single form.
+- The form posts to `POST /api/v1/auth/login`. When admin credentials are submitted, the backend responds with `400 USE_ADMIN_LOGIN`, triggering the single automatic transparent retry to `POST /api/v1/auth/admin/login`.
+- Direct service functions (`signInAdmin`, `loginAdmin`) remain intact in `src/core/auth/authService.ts` for programmatic/service use, but no role controls exist in the UI.
 
 ### 3.4 Error Mapping & Request ID Tracking
 `src/features/auth/mapAuthError.ts` centralizes error normalization:

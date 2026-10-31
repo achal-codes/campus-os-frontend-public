@@ -5,9 +5,10 @@ import { listRequests, setBulkTAT } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
+import { DateField } from '../components/DateField'
 import { showToast } from '../components/Toast'
 import type { DocRequest } from '../types'
-import { addDaysIST, formatDate, todayIST } from '../utils/time'
+import { formatDate, todayIST } from '../utils/time'
 import styles from './BulkTATScreen.module.css'
 
 interface LocationState {
@@ -90,7 +91,12 @@ export function BulkTATScreen() {
       return
     }
 
-    if (!expectedBy || expectedBy < todayIST()) {
+    if (!expectedBy) {
+      setError('Enter a valid date as DD/MM/YYYY.')
+      return
+    }
+
+    if (expectedBy < todayIST()) {
       setError('The date cannot be before today.')
       return
     }
@@ -328,68 +334,18 @@ export function BulkTATScreen() {
                     </span>
                   </div>
 
-                  <Stack gap={1}>
-                    <TextField
-                      label="Expected by * (YYYY-MM-DD)"
-                      type="date"
-                      value={expectedBy}
-                      onChange={(e) => setExpectedBy(e.target.value)}
-                      min={todayIST()}
-                      required
-                      data-testid="bulk-tat-date-input"
-                    />
-
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>
-                        Quick select:
-                      </span>
-                      <button
-                        type="button"
-                        style={{
-                          padding: '2px 8px',
-                          fontSize: '0.75rem',
-                          borderRadius: 'var(--radius-sm)',
-                          border: '1px solid var(--color-border)',
-                          background: 'var(--color-surface-muted)',
-                          cursor: 'pointer',
-                          color: 'var(--color-text)',
-                        }}
-                        onClick={() => setExpectedBy(addDaysIST(3))}
-                      >
-                        +3 days
-                      </button>
-                      <button
-                        type="button"
-                        style={{
-                          padding: '2px 8px',
-                          fontSize: '0.75rem',
-                          borderRadius: 'var(--radius-sm)',
-                          border: '1px solid var(--color-border)',
-                          background: 'var(--color-surface-muted)',
-                          cursor: 'pointer',
-                          color: 'var(--color-text)',
-                        }}
-                        onClick={() => setExpectedBy(addDaysIST(7))}
-                      >
-                        +1 week
-                      </button>
-                      <button
-                        type="button"
-                        style={{
-                          padding: '2px 8px',
-                          fontSize: '0.75rem',
-                          borderRadius: 'var(--radius-sm)',
-                          border: '1px solid var(--color-border)',
-                          background: 'var(--color-surface-muted)',
-                          cursor: 'pointer',
-                          color: 'var(--color-text)',
-                        }}
-                        onClick={() => setExpectedBy(addDaysIST(14))}
-                      >
-                        +2 weeks
-                      </button>
-                    </div>
-                  </Stack>
+                  <DateField
+                    label="Expected by * (DD/MM/YYYY)"
+                    value={expectedBy}
+                    onChange={(iso) => {
+                      setExpectedBy(iso)
+                      if (error) setError(null)
+                    }}
+                    min={todayIST()}
+                    showChips
+                    required
+                    data-testid="bulk-tat-date-input"
+                  />
 
                   <TextField
                     label="Note (optional)"

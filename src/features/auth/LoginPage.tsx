@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useAuth } from '@/core/auth'
-import { Alert, Button, Stack, Text, TextField } from '@/ui'
+import { Spinner } from '@/ui'
 import { mapAuthError, type MappedAuthError } from './mapAuthError'
 import { safeNext } from './safeNext'
 import { hasErrors, validateLogin, type FieldErrors, type LoginValues } from './validation'
@@ -10,11 +10,10 @@ import styles from './LoginPage.module.css'
 export function LoginPage() {
   const { user, signIn } = useAuth()
   const navigate = useNavigate()
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const next = safeNext(params.get('next'))
 
-  const initialIsAdmin = params.get('mode') === 'admin' || params.get('admin') === 'true'
-  const [isAdminMode, setIsAdminMode] = useState(initialIsAdmin)
+  const [showPassword, setShowPassword] = useState(false)
 
   const [values, setValues] = useState<LoginValues>({ email: '', otp: '' })
   const [errors, setErrors] = useState<FieldErrors<LoginValues>>({})
@@ -55,21 +54,6 @@ export function LoginPage() {
   const update = (field: keyof LoginValues) => (event: ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [field]: event.target.value }))
 
-  function toggleAdminMode() {
-    const nextMode = !isAdminMode
-    setIsAdminMode(nextMode)
-    setFormError(null)
-    setErrors({})
-    const newParams = new URLSearchParams(params)
-    if (nextMode) {
-      newParams.set('mode', 'admin')
-    } else {
-      newParams.delete('mode')
-      newParams.delete('admin')
-    }
-    setParams(newParams, { replace: true })
-  }
-
   async function handleAuthenticate() {
     const found = validateLogin(values)
     setErrors(found)
@@ -85,7 +69,7 @@ export function LoginPage() {
     }, 4000)
 
     try {
-      await signIn(values.email, values.otp, { isAdmin: isAdminMode })
+      await signIn(values.email, values.otp)
       if (wakingTimerRef.current) clearTimeout(wakingTimerRef.current)
       navigate(next, { replace: true })
     } catch (error) {
@@ -109,56 +93,149 @@ export function LoginPage() {
   }
 
   return (
-    <Stack gap={6} className={styles.container}>
-      <Stack gap={2}>
-        <div className={styles.badgeRow}>
-          <span className={styles.badge}>Campus OS</span>
-          <span className={styles.badgeSubtle}>
-            {isAdminMode ? 'Administrator Console' : 'DocDesk Portal'}
-          </span>
-        </div>
-        <Text as="h1" size="xl" weight="bold" className={styles.heading}>
-          {isAdminMode ? 'Administrator Sign In' : 'Welcome back'}
-        </Text>
-        <Text tone="textMuted" size="sm" className={styles.subtitle}>
-          {isAdminMode
-            ? 'Sign in with institutional admin credentials to access the console.'
-            : 'Sign in with your institution email and the OTP from your admin.'}
-        </Text>
-      </Stack>
+    <div className={styles.wrapper}>
+      {/* Soft blurred ambient blobs behind the card */}
+      <div className={styles.ambientBlobs} aria-hidden="true">
+        <div className={styles.blob1} />
+        <div className={styles.blob2} />
+        <div className={styles.blob3} />
+      </div>
 
-      <form
-        onSubmit={onSubmit}
-        noValidate
-        aria-label="Sign in"
-        aria-busy={submitting}
-        aria-describedby={formError ? 'login-error-alert' : undefined}
-        className={styles.form}
-      >
-        <Stack gap={4}>
+      {/* Centered Glass Card */}
+      <div className={styles.card}>
+        {/* 1. Small brand wordmark */}
+        <div className={styles.brandRow}>
+          <span className={styles.brandMark}>Campus OS</span>
+        </div>
+
+        {/* 2. Single H1 and helper text */}
+        <div className={styles.header}>
+          <h1 className={styles.heading}>Sign in</h1>
+          <p className={styles.helperText}>Use your campus account.</p>
+        </div>
+
+        {/* 3. Authentication Form */}
+        <form
+          onSubmit={onSubmit}
+          noValidate
+          aria-label="Sign in"
+          aria-busy={submitting}
+          aria-describedby={formError ? 'login-error-alert' : undefined}
+          className={styles.form}
+        >
+          {/* Email / ID field */}
+          <div className={styles.fieldGroup}>
+            <label htmlFor="login-email" className={styles.label}>
+              Email
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="username"
+              className={styles.input}
+              value={values.email}
+              onChange={update('email')}
+              disabled={submitting}
+              aria-invalid={errors.email ? true : undefined}
+              aria-describedby={errors.email ? 'login-email-error' : undefined}
+              data-testid="login-email"
+            />
+            {errors.email && (
+              <p id="login-email-error" className={styles.fieldError}>
+                {errors.email}
+              </p>
+            )}
+          </div>
+
+          {/* Password field with show/hide toggle */}
+          <div className={styles.fieldGroup}>
+            <div className={styles.labelRow}>
+              <label htmlFor="login-password" id="login-password-label" className={styles.label}>
+                Password
+              </label>
+              {/* Screen reader / compatibility label for OTP queries */}
+              <label htmlFor="login-password" id="login-otp-label" className={styles.srOnly}>
+                OTP
+              </label>
+            </div>
+            <div className={styles.passwordWrapper}>
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                className={`${styles.input} ${styles.passwordInput}`}
+                value={values.otp}
+                onChange={update('otp')}
+                disabled={submitting}
+                aria-invalid={errors.otp ? true : undefined}
+                aria-describedby={errors.otp ? 'login-password-error' : undefined}
+                data-testid="login-password"
+              />
+              <button
+                type="button"
+                className={styles.revealButton}
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                data-testid="toggle-password-visibility"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.otp && (
+              <p id="login-password-error" className={styles.fieldError}>
+                {errors.otp}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={rateLimitCountdown > 0 || submitting}
+            data-testid="login-submit"
+          >
+            {submitting ? (
+              <span className={styles.submitContent}>
+                <Spinner size="sm" />
+                <span>Signing in...</span>
+              </span>
+            ) : rateLimitCountdown > 0 ? (
+              `Wait ${rateLimitCountdown}s`
+            ) : (
+              'Sign in'
+            )}
+          </button>
+
+          {/* 4. Inline Error & Recovery Region */}
           {formError && (
-            <Alert tone="danger" data-testid="login-error" id="login-error-alert">
-              <Stack gap={1}>
-                <div>{formError.message}</div>
-                {formError.requestId && (
-                  <div className={styles.requestId} data-testid="login-error-request-id">
-                    Reference: {formError.requestId}
-                  </div>
-                )}
-                {formError.isRecoverable && (
-                  <button
-                    type="button"
-                    onClick={handleAuthenticate}
-                    className={styles.retryBtn}
-                    data-testid="login-retry-button"
-                  >
-                    Try Again
-                  </button>
-                )}
-              </Stack>
-            </Alert>
+            <div
+              className={styles.errorAlert}
+              role="alert"
+              id="login-error-alert"
+              data-testid="login-error"
+            >
+              <div className={styles.errorMessage}>{formError.message}</div>
+              {formError.requestId && (
+                <div className={styles.requestId} data-testid="login-error-request-id">
+                  Reference: {formError.requestId}
+                </div>
+              )}
+              {formError.isRecoverable && (
+                <button
+                  type="button"
+                  onClick={handleAuthenticate}
+                  className={styles.retryBtn}
+                  data-testid="login-retry-button"
+                >
+                  Try Again
+                </button>
+              )}
+            </div>
           )}
 
+          {/* Cold-start waiting indicator */}
           {isWaking && (
             <div className={styles.wakingNotice} role="status">
               <span className={styles.pulseDot} />
@@ -166,55 +243,13 @@ export function LoginPage() {
             </div>
           )}
 
-          <TextField
-            label="Email"
-            type="email"
-            autoComplete="username"
-            value={values.email}
-            onChange={update('email')}
-            error={errors.email}
-            disabled={submitting}
-            data-testid="login-email"
-          />
-          <TextField
-            label="OTP"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={8}
-            value={values.otp}
-            onChange={update('otp')}
-            error={errors.otp}
-            disabled={submitting}
-            data-testid="login-otp"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            loading={submitting}
-            disabled={rateLimitCountdown > 0 || submitting}
-            data-testid="login-submit"
-          >
-            {rateLimitCountdown > 0 ? `Wait ${rateLimitCountdown}s` : isAdminMode ? 'Sign in as Admin' : 'Sign in'}
-          </Button>
-
           {rateLimitCountdown > 0 && (
-            <Text size="xs" tone="textMuted" style={{ textAlign: 'center' }}>
+            <p className={styles.rateLimitNote}>
               Rate limited: login requests will be unlocked in {rateLimitCountdown} seconds.
-            </Text>
+            </p>
           )}
-
-          <div className={styles.modeToggleArea}>
-            <button
-              type="button"
-              onClick={toggleAdminMode}
-              className={styles.modeToggleBtn}
-              data-testid="toggle-admin-login"
-            >
-              {isAdminMode ? '← Sign in as student, faculty, or staff' : 'Sign in as Administrator →'}
-            </button>
-          </div>
-        </Stack>
-      </form>
-    </Stack>
+        </form>
+      </div>
+    </div>
   )
 }

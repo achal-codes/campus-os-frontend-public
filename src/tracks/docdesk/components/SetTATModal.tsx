@@ -3,7 +3,8 @@ import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { setTAT } from '../api/requests'
 import { showToast } from './Toast'
 import type { DocRequest } from '../types'
-import { addDaysIST, todayIST } from '../utils/time'
+import { todayIST } from '../utils/time'
+import { DateField } from './DateField'
 
 interface SetTATModalProps {
   request: DocRequest
@@ -32,7 +33,7 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
     e.preventDefault()
 
     if (!expectedBy) {
-      setError('Please select an expected completion date.')
+      setError('Enter a valid date as DD/MM/YYYY.')
       return
     }
 
@@ -82,79 +83,30 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
 
             {error && <Alert tone="danger">{error}</Alert>}
 
-            <Stack gap={1}>
-              <TextField
-                label="Expected by (YYYY-MM-DD)"
-                type="date"
-                value={expectedBy}
-                onChange={(e) => setExpectedBy(e.target.value)}
-                min={todayIST()}
-                required
-                data-testid="tat-date-input"
-              />
-
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>
-                  Quick select:
-                </span>
-                <button
-                  type="button"
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-border)',
-                    background: 'var(--color-surface-muted)',
-                    cursor: 'pointer',
-                    color: 'var(--color-text)',
-                  }}
-                  onClick={() => setExpectedBy(addDaysIST(3))}
-                >
-                  +3 days
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-border)',
-                    background: 'var(--color-surface-muted)',
-                    cursor: 'pointer',
-                    color: 'var(--color-text)',
-                  }}
-                  onClick={() => setExpectedBy(addDaysIST(7))}
-                >
-                  +1 week
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-border)',
-                    background: 'var(--color-surface-muted)',
-                    cursor: 'pointer',
-                    color: 'var(--color-text)',
-                  }}
-                  onClick={() => setExpectedBy(addDaysIST(14))}
-                >
-                  +2 weeks
-                </button>
-              </div>
-            </Stack>
+            <DateField
+              label="Expected by (DD/MM/YYYY)"
+              value={expectedBy}
+              onChange={(iso) => {
+                setExpectedBy(iso)
+                if (error) setError(null)
+              }}
+              min={todayIST()}
+              showChips
+              required
+              data-testid="tat-date-input"
+            />
 
             <TextField
               label="TAT note (optional)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Verification in progress"
+              placeholder="e.g. Awaiting signature from registrar"
+              maxLength={500}
               data-testid="tat-note-input"
             />
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="secondary" onClick={onClose} disabled={submitting}>
+              <Button variant="secondary" onClick={onClose} disabled={submitting} data-testid="cancel-tat-button">
                 Cancel
               </Button>
               <Button type="submit" loading={submitting} data-testid="save-tat-button">

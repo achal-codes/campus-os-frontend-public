@@ -14,7 +14,7 @@ test.describe('authentication', () => {
   test('shows an error for rejected credentials', async ({ page, loginPage }) => {
     await loginPage.goto()
     await loginPage.signIn(FAILING_EMAIL)
-    await expect(loginPage.error()).toHaveText('Invalid email_id or OTP')
+    await expect(loginPage.error()).toContainText('Invalid email_id or OTP')
     await expect(page).toHaveURL('/login')
   })
 

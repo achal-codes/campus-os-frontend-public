@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { setBulkTAT } from '../api/requests'
 import { todayIST } from '../utils/time'
+import { DateField } from './DateField'
 
 interface BulkTATModalProps {
   requestIds: string[]
@@ -15,7 +16,7 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // ESC key dismissal (BUG-06)
+  // ESC key dismissal
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && !submitting) {
@@ -39,7 +40,12 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
       return
     }
 
-    if (!expectedBy || expectedBy < todayIST()) {
+    if (!expectedBy) {
+      setError('Enter a valid date as DD/MM/YYYY.')
+      return
+    }
+
+    if (expectedBy < todayIST()) {
       setError('Expected date must be today or a future date in IST.')
       return
     }
@@ -75,9 +81,7 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -98,12 +102,15 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
 
             {error && <Alert tone="danger">{error}</Alert>}
 
-            <TextField
-              label="Expected Completion Date (IST)"
-              type="date"
+            <DateField
+              label="Expected by (DD/MM/YYYY)"
               value={expectedBy}
-              onChange={(e) => setExpectedBy(e.target.value)}
+              onChange={(iso) => {
+                setExpectedBy(iso)
+                if (error) setError(null)
+              }}
               min={todayIST()}
+              showChips
               required
               data-testid="bulk-tat-date-input"
             />

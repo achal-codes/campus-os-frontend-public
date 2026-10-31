@@ -20,14 +20,123 @@ afterEach(() => {
   localStorage.clear()
 })
 
-describe('Login Authentication Flows', () => {
+describe('Login Page Presentation & Architecture (Part 1)', () => {
+  // 1. None of the removed marketing phrases render on the login page
+  it('1. does not render any of the removed marketing phrases or feature list', () => {
+    renderRoute({ route: '/login' })
+
+    expect(screen.queryByText(/Modern document infrastructure for higher education/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Streamlined credential requests/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Real-Time Request Lifecycle/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Student Affairs Workflow/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Role-Enforced Security/i)).not.toBeInTheDocument()
+  })
+
+  // 2. Exactly one H1, one form, one primary submit button
+  it('2. renders exactly one H1, one form, and one primary submit button', () => {
+    renderRoute({ route: '/login' })
+
+    const h1s = screen.getAllByRole('heading', { level: 1 })
+    expect(h1s).toHaveLength(1)
+    expect(h1s[0]).toHaveTextContent('Sign in')
+
+    const forms = screen.getAllByRole('form')
+    expect(forms).toHaveLength(1)
+
+    const submitButtons = screen.getAllByRole('button', { name: 'Sign in' })
+    expect(submitButtons).toHaveLength(1)
+  })
+
+  // 6. No "Sign in as Administrator / Faculty / Student" text or control renders on the login page
+  it('6. does not render any "Sign in as Administrator / Faculty / Student" text or controls', () => {
+    renderRoute({ route: '/login' })
+
+    expect(screen.queryByText(/Sign in as Administrator/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sign in as Faculty/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sign in as Student/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sign in as Admin/i)).not.toBeInTheDocument()
+    expect(screen.queryByTestId('toggle-admin-login')).not.toBeInTheDocument()
+
+    // Even if ?mode=admin is provided in URL, UI remains single role-blind form
+    renderRoute({ route: '/login?mode=admin' })
+    expect(screen.queryByText(/Sign in as Administrator/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sign in as Admin/i)).not.toBeInTheDocument()
+    expect(screen.queryByTestId('toggle-admin-login')).not.toBeInTheDocument()
+  })
+
+  // 7. Login page contains exactly one form and one submit button with nothing rendered after the button except the error region
+  it('7. contains exactly one form and one submit button, with nothing rendered after the button except the error region', () => {
+    const { container } = renderRoute({ route: '/login' })
+
+    const forms = container.querySelectorAll('form')
+    expect(forms).toHaveLength(1)
+
+    const submitButtons = container.querySelectorAll('button[type="submit"]')
+    expect(submitButtons).toHaveLength(1)
+    expect(submitButtons[0]).toHaveTextContent('Sign in')
+
+    // Find siblings or elements following the submit button inside the form
+    const submitBtn = submitButtons[0]
+    let nextEl = submitBtn.nextElementSibling
+    while (nextEl) {
+      // Allowed elements: error alert (role="alert"), wakingNotice, or rateLimitNote.
+      // Forbidden: role toggles, links, secondary buttons, dividers.
+      const isErrorAlert = nextEl.getAttribute('role') === 'alert' || nextEl.getAttribute('data-testid') === 'login-error'
+      const isWaking = nextEl.getAttribute('role') === 'status'
+      const isRateLimit = nextEl.tagName.toLowerCase() === 'p' && nextEl.textContent?.includes('Rate limited')
+      expect(isErrorAlert || isWaking || isRateLimit).toBe(true)
+      nextEl = nextEl.nextElementSibling
+    }
+  })
+
+  // 3. Show/hide password toggles type and updates aria-pressed
+  it('3. show/hide password toggles input type and updates aria-pressed / aria-label', async () => {
+    const { user } = renderRoute({ route: '/login' })
+
+    const passwordInput = screen.getByLabelText('Password') as HTMLInputElement
+    expect(passwordInput.type).toBe('password')
+
+    const toggleBtn = screen.getByRole('button', { name: 'Show password' })
+    expect(toggleBtn).toHaveAttribute('aria-pressed', 'false')
+
+    // Click show
+    await user.click(toggleBtn)
+    expect(passwordInput.type).toBe('text')
+    expect(toggleBtn).toHaveAttribute('aria-pressed', 'true')
+    expect(toggleBtn).toHaveAccessibleName('Hide password')
+
+    // Click hide
+    await user.click(toggleBtn)
+    expect(passwordInput.type).toBe('password')
+    expect(toggleBtn).toHaveAttribute('aria-pressed', 'false')
+    expect(toggleBtn).toHaveAccessibleName('Show password')
+  })
+
+  // 5. Form is keyboard-operable end to end; Enter submits
+  it('5. is keyboard operable and submits when Enter is pressed in an input field', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(token('student', 'Student Key', 'student@campus.edu'))
+    vi.stubGlobal('fetch', fetchMock)
+    const { user, router } = renderRoute({ route: '/login?next=%2Ftracks%2Fexample' })
+
+    const emailInput = screen.getByLabelText('Email')
+    const passwordInput = screen.getByLabelText('Password')
+
+    await user.type(emailInput, 'student@campus.edu')
+    await user.type(passwordInput, '123456{Enter}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/tracks/example'))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('Login Authentication Flows (Part 1.4 & Phase 2)', () => {
   it('shows field errors without submitting if required fields are missing', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const { user } = renderRoute({ route: '/login' })
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
     expect(screen.getByLabelText('Email')).toHaveAccessibleDescription('Email is required.')
-    expect(screen.getByLabelText('OTP')).toHaveAccessibleDescription('OTP is required.')
+    expect(screen.getByLabelText('Password')).toHaveAccessibleDescription('OTP is required.')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -38,7 +147,7 @@ describe('Login Authentication Flows', () => {
     const { user, router } = renderRoute({ route: '/login?next=%2Ftracks%2Fexample' })
 
     await user.type(screen.getByLabelText('Email'), 'Asha@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '482913')
+    await user.type(screen.getByLabelText('Password'), '482913')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/tracks/example'))
@@ -77,7 +186,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'admin@team24.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByTestId('nav-admin')).toBeInTheDocument()
@@ -114,7 +223,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'admin@team24.com')
-    await user.type(screen.getByLabelText('OTP'), '999999')
+    await user.type(screen.getByLabelText('Password'), '999999')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     const alert = await screen.findByRole('alert')
@@ -136,7 +245,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'outsider@gmail.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Unknown institution')
@@ -160,7 +269,7 @@ describe('Login Authentication Flows', () => {
     const { user: userA } = renderRoute({ route: '/login' })
 
     await userA.type(screen.getByLabelText('Email'), 'admin@team24.com')
-    await userA.type(screen.getByLabelText('OTP'), '123456')
+    await userA.type(screen.getByLabelText('Password'), '123456')
     await userA.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByTestId('nav-admin')).toBeInTheDocument()
@@ -178,7 +287,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'admin@team24.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()
@@ -192,7 +301,7 @@ describe('Login Authentication Flows', () => {
     const { user, router } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'student@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '777888')
+    await user.type(screen.getByLabelText('Password'), '777888')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => expect(router.state.location.pathname).not.toBe('/login'))
@@ -222,7 +331,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'student@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
 
     const submitBtn = screen.getByRole('button', { name: 'Sign in' })
     const form = screen.getByRole('form', { name: 'Sign in' })
@@ -249,7 +358,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'asha@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     const netAlert = await screen.findByRole('alert')
@@ -265,7 +374,7 @@ describe('Login Authentication Flows', () => {
     const { user } = renderRoute({ route: '/login' })
 
     await user.type(screen.getByLabelText('Email'), 'asha@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     const timeoutAlert = await screen.findByRole('alert')
@@ -273,13 +382,94 @@ describe('Login Authentication Flows', () => {
     expect(screen.getByTestId('login-retry-button')).toBeInTheDocument()
   })
 
-  // 9. Verify the session state shape is identical regardless of which endpoint produced it.
-  it('9a. produces correct session shape via user login', async () => {
+  // 8. Admin credentials entered in the single form still succeed through the USE_ADMIN_LOGIN single retry
+  it('8. admin credentials entered in the single form succeed via USE_ADMIN_LOGIN retry and redirect to admin page', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        jsonResponse(400, {
+          error: {
+            code: 'USE_ADMIN_LOGIN',
+            message: 'This is an admin account, use POST /api/v1/auth/admin/login',
+          },
+          request_id: 'req_admin_redirect_400',
+        }),
+      )
+      .mockResolvedValueOnce(token('admin', 'Admin Team', 'admin@team24.com'))
+
+    vi.stubGlobal('fetch', fetchMock)
+    const { user, router } = renderRoute({ route: '/login?next=%2Fadmin' })
+
+    await user.type(screen.getByLabelText('Email'), 'admin@team24.com')
+    await user.type(screen.getByLabelText('Password'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/admin'))
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/v1\/auth\/login$/)
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/api\/v1\/auth\/admin\/login$/)
+
+    const session = loadSession()
+    expect(session?.user.role).toBe('admin')
+  })
+
+  // 9. Student, Faculty and Staff credentials still log in through /auth/login and redirect to their correct landing pages
+  it('9a. student credentials log in through /auth/login and redirect to default landing page', async () => {
+    const fetchStudent = vi.fn().mockResolvedValue(token('student', 'Student Ananya', 'student@campus.edu'))
+    vi.stubGlobal('fetch', fetchStudent)
+    const { user, router } = renderRoute({ route: '/login' })
+    await user.type(screen.getByLabelText('Email'), 'student@campus.edu')
+    await user.type(screen.getByLabelText('Password'), '111111')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+    expect(loadSession()?.user.role).toBe('student')
+    expect(fetchStudent).toHaveBeenCalledTimes(1)
+    expect(fetchStudent.mock.calls[0][0]).toMatch(/\/api\/v1\/auth\/login$/)
+  })
+
+  it('9b. faculty credentials log in through /auth/login and redirect to requested destination', async () => {
+    const fetchFaculty = vi.fn().mockResolvedValue(token('faculty', 'Prof. Verma', 'verma@campus.edu'))
+    vi.stubGlobal('fetch', fetchFaculty)
+    const { user, router } = renderRoute({ route: '/login?next=%2Ftracks%2Fexample' })
+    await user.type(screen.getByLabelText('Email'), 'verma@campus.edu')
+    await user.type(screen.getByLabelText('Password'), '222222')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/tracks/example'))
+    expect(loadSession()?.user.role).toBe('faculty')
+    expect(fetchFaculty.mock.calls[0][0]).toMatch(/\/api\/v1\/auth\/login$/)
+  })
+
+  it('9c. staff credentials log in through /auth/login and redirect to staff queue destination', async () => {
+    const fetchStaff = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/auth/login')) {
+        return Promise.resolve(token('office_staff', 'Ramesh Staff', 'ramesh@campus.edu'))
+      }
+      // Hydrate profile for Student Affairs guard
+      return Promise.resolve(
+        jsonResponse(200, {
+          email_id: 'ramesh@campus.edu',
+          name: 'Ramesh Staff',
+          role: 'office_staff',
+          dept: 'Student Affairs',
+        }),
+      )
+    })
+    vi.stubGlobal('fetch', fetchStaff)
+    const { user, router } = renderRoute({ route: '/login?next=%2Ftracks%2Fdocdesk%2Fstaff' })
+    await user.type(screen.getByLabelText('Email'), 'ramesh@campus.edu')
+    await user.type(screen.getByLabelText('Password'), '333333')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/tracks/docdesk/staff'))
+    expect(loadSession()?.user.role).toBe('office_staff')
+    expect(fetchStaff.mock.calls[0][0]).toMatch(/\/api\/v1\/auth\/login$/)
+  })
+
+  // Verify the session state shape is identical regardless of user vs admin recovery
+  it('9d. produces correct session shape via user login', async () => {
     const fetchUser = vi.fn().mockResolvedValue(token('faculty', 'Prof Rao', 'rao@team1.com'))
     vi.stubGlobal('fetch', fetchUser)
     const { user } = renderRoute({ route: '/login' })
     await user.type(screen.getByLabelText('Email'), 'rao@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.type(screen.getByLabelText('Password'), '123456')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => expect(loadSession()).not.toBeNull())
@@ -290,13 +480,21 @@ describe('Login Authentication Flows', () => {
     expect(userSession!.user.role).toBe('faculty')
   })
 
-  it('9b. produces identical session shape via admin login', async () => {
-    const fetchAdmin = vi.fn().mockResolvedValue(token('admin', 'Admin Rao', 'admin@team1.com'))
+  it('9e. produces identical session shape via admin recovery', async () => {
+    const fetchAdmin = vi.fn()
+      .mockResolvedValueOnce(
+        jsonResponse(400, {
+          error: { code: 'USE_ADMIN_LOGIN', message: 'Use admin login' },
+          request_id: 'req_shape_400',
+        }),
+      )
+      .mockResolvedValueOnce(token('admin', 'Admin Rao', 'admin@team1.com'))
+
     vi.stubGlobal('fetch', fetchAdmin)
-    const { user } = renderRoute({ route: '/login?mode=admin' })
+    const { user } = renderRoute({ route: '/login' })
     await user.type(screen.getByLabelText('Email'), 'admin@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '123456')
-    await user.click(screen.getByRole('button', { name: 'Sign in as Admin' }))
+    await user.type(screen.getByLabelText('Password'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => expect(loadSession()).not.toBeNull())
     const adminSession = loadSession()
@@ -306,22 +504,16 @@ describe('Login Authentication Flows', () => {
     expect(adminSession!.user.role).toBe('admin')
   })
 
-  // 10. Explicit admin sign-in mode posts directly to /auth/admin/login
-  it('10. in explicit admin mode, posts directly to /api/v1/auth/admin/login', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(token('admin', 'Admin Team', 'admin@team24.com'))
+  // 10. Service layer preserves direct signInAdmin without exposing role options in the UI
+  it('10. preserves underlying admin service code for programmatic admin authentication', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(token('admin', 'Direct Admin', 'admin@direct.edu'))
     vi.stubGlobal('fetch', fetchMock)
-    const { user } = renderRoute({ route: '/login' })
 
-    // Toggle into admin mode
-    await user.click(screen.getByTestId('toggle-admin-login'))
-    expect(screen.getByRole('heading', { name: 'Administrator Sign In' })).toBeInTheDocument()
+    // Call service level signInAdmin directly
+    const { signInAdmin } = await import('@/core/auth/authService')
+    const adminUser = await signInAdmin('admin@direct.edu', 'direct123')
 
-    await user.type(screen.getByLabelText('Email'), 'admin@team24.com')
-    await user.type(screen.getByLabelText('OTP'), '654321')
-    await user.click(screen.getByRole('button', { name: 'Sign in as Admin' }))
-
-    await waitFor(() => expect(screen.getByTestId('nav-admin')).toBeInTheDocument())
-
+    expect(adminUser.role).toBe('admin')
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/v1\/auth\/admin\/login$/)
   })
@@ -332,7 +524,7 @@ describe('Login Authentication Flows', () => {
     ))
     const { user } = renderRoute({ route: '/login' })
     await user.type(screen.getByLabelText('Email'), 'asha@team1.com')
-    await user.type(screen.getByLabelText('OTP'), '111111')
+    await user.type(screen.getByLabelText('Password'), '111111')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Too many login attempts')
     expect(screen.getByRole('button', { name: /Wait \d+s/i })).toBeDisabled()
