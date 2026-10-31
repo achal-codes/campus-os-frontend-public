@@ -10,9 +10,11 @@ import styles from './LoginPage.module.css'
 export function LoginPage() {
   const { user, signIn } = useAuth()
   const navigate = useNavigate()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const next = safeNext(params.get('next'))
 
+  const initialIsAdmin = params.get('mode') === 'admin' || params.get('admin') === 'true'
+  const [isAdminMode, setIsAdminMode] = useState(initialIsAdmin)
   const [showPassword, setShowPassword] = useState(false)
 
   const [values, setValues] = useState<LoginValues>({ email: '', otp: '' })
@@ -54,6 +56,21 @@ export function LoginPage() {
   const update = (field: keyof LoginValues) => (event: ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [field]: event.target.value }))
 
+  function toggleAdminMode() {
+    const nextMode = !isAdminMode
+    setIsAdminMode(nextMode)
+    setFormError(null)
+    setErrors({})
+    const newParams = new URLSearchParams(params)
+    if (nextMode) {
+      newParams.set('mode', 'admin')
+    } else {
+      newParams.delete('mode')
+      newParams.delete('admin')
+    }
+    setParams(newParams, { replace: true })
+  }
+
   async function handleAuthenticate() {
     const found = validateLogin(values)
     setErrors(found)
@@ -69,7 +86,7 @@ export function LoginPage() {
     }, 4000)
 
     try {
-      await signIn(values.email, values.otp)
+      await signIn(values.email, values.otp, { isAdmin: isAdminMode })
       if (wakingTimerRef.current) clearTimeout(wakingTimerRef.current)
       navigate(next, { replace: true })
     } catch (error) {
@@ -110,8 +127,12 @@ export function LoginPage() {
 
         {/* 2. Single H1 and helper text */}
         <div className={styles.header}>
-          <h1 className={styles.heading}>Sign in</h1>
-          <p className={styles.helperText}>Use your campus account.</p>
+          <h1 className={styles.heading}>
+            {isAdminMode ? 'Administrator Sign In' : 'Sign in'}
+          </h1>
+          <p className={styles.helperText}>
+            {isAdminMode ? 'Use your administrator account.' : 'Use your campus account.'}
+          </p>
         </div>
 
         {/* 3. Authentication Form */}
@@ -206,12 +227,26 @@ export function LoginPage() {
               </span>
             ) : rateLimitCountdown > 0 ? (
               `Wait ${rateLimitCountdown}s`
+            ) : isAdminMode ? (
+              'Sign in as Admin'
             ) : (
               'Sign in'
             )}
           </button>
 
-          {/* 4. Inline Error & Recovery Region */}
+          {/* Admin Sign-In Mode Toggle */}
+          <div className={styles.adminToggleArea}>
+            <button
+              type="button"
+              onClick={toggleAdminMode}
+              className={styles.adminToggleBtn}
+              data-testid="toggle-admin-login"
+            >
+              {isAdminMode ? '← Sign in as student, faculty, or staff' : 'Sign in as Administrator →'}
+            </button>
+          </div>
+
+          {/* Inline Error & Recovery Region */}
           {formError && (
             <div
               className={styles.errorAlert}

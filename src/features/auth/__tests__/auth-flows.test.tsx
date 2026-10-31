@@ -52,46 +52,37 @@ describe('Login Page Presentation & Architecture (Part 1)', () => {
     expect(screen.getByLabelText('Enter OTP')).toBeInTheDocument()
   })
 
-  // 6. No "Sign in as Administrator / Faculty / Student" text or control renders on the login page
-  it('6. does not render any "Sign in as Administrator / Faculty / Student" text or controls', () => {
-    renderRoute({ route: '/login' })
+  // 6. Supports toggling into Administrator Sign In mode
+  it('6. toggles between standard and administrator sign-in modes', async () => {
+    const { user } = renderRoute({ route: '/login' })
 
-    expect(screen.queryByText(/Sign in as Administrator/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Sign in as Faculty/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Sign in as Student/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Sign in as Admin/i)).not.toBeInTheDocument()
-    expect(screen.queryByTestId('toggle-admin-login')).not.toBeInTheDocument()
+    const toggleBtn = screen.getByTestId('toggle-admin-login')
+    expect(toggleBtn).toHaveTextContent('Sign in as Administrator →')
 
-    // Even if ?mode=admin is provided in URL, UI remains single role-blind form
-    renderRoute({ route: '/login?mode=admin' })
-    expect(screen.queryByText(/Sign in as Administrator/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Sign in as Admin/i)).not.toBeInTheDocument()
-    expect(screen.queryByTestId('toggle-admin-login')).not.toBeInTheDocument()
+    await user.click(toggleBtn)
+    expect(screen.getByRole('heading', { name: 'Administrator Sign In' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in as Admin' })).toBeInTheDocument()
+    expect(toggleBtn).toHaveTextContent('← Sign in as student, faculty, or staff')
+
+    await user.click(toggleBtn)
+    expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
-  // 7. Login page contains exactly one form and one submit button with nothing rendered after the button except the error region
-  it('7. contains exactly one form and one submit button, with nothing rendered after the button except the error region', () => {
-    const { container } = renderRoute({ route: '/login' })
+  // 7. Directly posts to /api/v1/auth/admin/login when in admin mode
+  it('7. directly posts to /api/v1/auth/admin/login when in admin mode', async () => {
+    const fetchAdmin = vi.fn().mockResolvedValue(token('admin', 'Admin Team', 'admin@team24.com'))
+    vi.stubGlobal('fetch', fetchAdmin)
+    const { user } = renderRoute({ route: '/login?mode=admin' })
 
-    const forms = container.querySelectorAll('form')
-    expect(forms).toHaveLength(1)
+    expect(screen.getByRole('heading', { name: 'Administrator Sign In' })).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Email'), 'admin@team24.com')
+    await user.type(screen.getByLabelText('Password'), '204884')
+    await user.click(screen.getByRole('button', { name: 'Sign in as Admin' }))
 
-    const submitButtons = container.querySelectorAll('button[type="submit"]')
-    expect(submitButtons).toHaveLength(1)
-    expect(submitButtons[0]).toHaveTextContent('Sign in')
-
-    // Find siblings or elements following the submit button inside the form
-    const submitBtn = submitButtons[0]
-    let nextEl = submitBtn.nextElementSibling
-    while (nextEl) {
-      // Allowed elements: error alert (role="alert"), wakingNotice, or rateLimitNote.
-      // Forbidden: role toggles, links, secondary buttons, dividers.
-      const isErrorAlert = nextEl.getAttribute('role') === 'alert' || nextEl.getAttribute('data-testid') === 'login-error'
-      const isWaking = nextEl.getAttribute('role') === 'status'
-      const isRateLimit = nextEl.tagName.toLowerCase() === 'p' && nextEl.textContent?.includes('Rate limited')
-      expect(isErrorAlert || isWaking || isRateLimit).toBe(true)
-      nextEl = nextEl.nextElementSibling
-    }
+    await waitFor(() => expect(screen.getByTestId('nav-admin')).toBeInTheDocument())
+    expect(fetchAdmin).toHaveBeenCalledTimes(1)
+    expect(fetchAdmin.mock.calls[0][0]).toMatch(/\/api\/v1\/auth\/admin\/login$/)
   })
 
   // 3. Show/hide password toggles type and updates aria-pressed
