@@ -92,7 +92,11 @@ export function StaffDetailScreen() {
   }
 
   async function handleWithdrawAnswer() {
-    if (!window.confirm('Withdraw this answer? The request will revert to pending status and all attached documents will be detached.')) {
+    const warningMsg = request!.filled_form
+      ? `Withdraw this answer? The request will revert to pending status. NOTE: The requester's uploaded filled form (${request!.filled_form.filename}) will also be permanently deleted by the server.`
+      : 'Withdraw this answer? The request will revert to pending status and all attached documents will be detached.'
+
+    if (!window.confirm(warningMsg)) {
       return
     }
 

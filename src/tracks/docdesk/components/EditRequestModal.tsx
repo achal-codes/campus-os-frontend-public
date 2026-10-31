@@ -48,6 +48,23 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty, submitting])
 
+  // ESC key dismissal (BUG-06)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !submitting) {
+        if (isDirty) {
+          if (window.confirm('You have unsaved changes. Discard?')) {
+            onClose()
+          }
+        } else {
+          onClose()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isDirty, submitting, onClose])
+
   function handleCancel() {
     if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
       return
@@ -93,7 +110,9 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

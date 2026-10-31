@@ -26,6 +26,7 @@ export function AnswerComposerModal({
 
   const isDirty = message !== (request.answer?.message ?? '') || file !== null || removeDocument
 
+  // Prevent accidental unload with unsaved changes
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
       if (isDirty && !submitting) {
@@ -36,6 +37,23 @@ export function AnswerComposerModal({
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty, submitting])
+
+  // ESC key dismissal (BUG-06)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !submitting) {
+        if (isDirty) {
+          if (window.confirm('You have unsaved changes. Discard?')) {
+            onClose()
+          }
+        } else {
+          onClose()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isDirty, submitting, onClose])
 
   function handleCancel() {
     if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
@@ -116,7 +134,9 @@ export function AnswerComposerModal({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -180,8 +200,15 @@ export function AnswerComposerModal({
               )}
 
               {removeDocument && (
-                <Alert tone="info">
-                  Document will be removed when saved.
+                <Alert tone={request.filled_form ? 'danger' : 'info'}>
+                  {request.filled_form ? (
+                    <span>
+                      <strong>Warning:</strong> Removing this staff document will also permanently delete the
+                      requester&apos;s uploaded filled form ({request.filled_form.filename}).
+                    </span>
+                  ) : (
+                    <span>Document will be removed when saved.</span>
+                  )}
                   <Button
                     size="sm"
                     variant="secondary"

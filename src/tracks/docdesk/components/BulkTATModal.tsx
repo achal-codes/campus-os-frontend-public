@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { setBulkTAT } from '../api/requests'
 import { todayIST } from '../utils/time'
@@ -14,6 +14,17 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // ESC key dismissal (BUG-06)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !submitting) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [submitting, onClose])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -64,7 +75,9 @@ export function BulkTATModal({ requestIds, onClose, onSuccess }: BulkTATModalPro
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

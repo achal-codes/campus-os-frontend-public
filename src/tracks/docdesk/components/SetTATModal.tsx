@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { setTAT } from '../api/requests'
 import type { DocRequest } from '../types'
@@ -15,6 +15,17 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
   const [note, setNote] = useState(request.tat?.note ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // ESC key dismissal (BUG-06)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !submitting) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [submitting, onClose])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -52,7 +63,9 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
