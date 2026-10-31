@@ -1,4 +1,3 @@
-/* oxlint-disable react/only-export-components */
 import { useEffect, useState } from 'react'
 import styles from './Toast.module.css'
 
@@ -52,3 +51,4 @@ export function ToastContainer() {
     </div>
   )
 }
+

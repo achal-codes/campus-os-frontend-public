@@ -59,7 +59,7 @@ export function RequesterDashboardScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
           <Stack gap={1}>
             <Text as="h1" size="2xl" weight="bold">
-              DocDesk — Document Portal
+              DocDesk
             </Text>
             <Text tone="textMuted">
               Welcome, <strong>{profile?.name ?? user?.name ?? 'User'}</strong> ({user?.role})

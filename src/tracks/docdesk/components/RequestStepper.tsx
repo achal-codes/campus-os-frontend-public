@@ -25,7 +25,7 @@ export function RequestStepper({ request }: RequestStepperProps) {
 
   return (
     <div className={styles.card} data-testid="request-stepper">
-      <div className={styles.stepper} data-testid="lifecycle-strip">
+      <div className={styles.stepper}>
         <div className={styles.connector} aria-hidden="true">
           <div className={styles.connectorFill} style={{ width: fillPercent }} />
         </div>
@@ -116,3 +116,4 @@ export function RequestStepper({ request }: RequestStepperProps) {
     </div>
   )
 }
+

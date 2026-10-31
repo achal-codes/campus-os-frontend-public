@@ -25,14 +25,14 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null)
+  const cancelBtnRef = useRef<HTMLButtonElement>(null)
 
   // Focus Cancel on open
   useEffect(() => {
     if (isOpen) {
+      // Defer to next tick so element is mounted
       const timer = setTimeout(() => {
-        const firstBtn = modalRef.current?.querySelector<HTMLButtonElement>('button')
-        firstBtn?.focus()
+        cancelBtnRef.current?.focus()
       }, 0)
       return () => clearTimeout(timer)
     }
@@ -65,7 +65,7 @@ export function ConfirmModal({
       aria-labelledby="confirm-modal-title"
       aria-describedby="confirm-modal-desc"
     >
-      <div ref={modalRef} className={styles.modal}>
+      <div className={styles.modal}>
         <Stack gap={2}>
           <Text id="confirm-modal-title" as="h2" size="lg" weight="bold" className={styles.title}>
             {title}
@@ -77,6 +77,7 @@ export function ConfirmModal({
 
         <div className={styles.actions}>
           <Button
+            ref={cancelBtnRef}
             variant="secondary"
             onClick={onCancel}
             disabled={loading}
@@ -95,3 +96,4 @@ export function ConfirmModal({
     </div>
   )
 }
+
