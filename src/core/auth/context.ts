@@ -1,9 +1,9 @@
 import { createContext } from 'react'
-import type { User } from './authService'
+import type { User, SignInOptions } from './authService'
 
 export interface AuthContextValue {
   user: User | null
-  signIn: (email: string, otp: string) => Promise<User>
+  signIn: (email: string, otp: string, options?: SignInOptions) => Promise<User>
   signOut: () => Promise<void>
 }
 

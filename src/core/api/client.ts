@@ -36,12 +36,19 @@ export async function apiRequest<T>(path: string, { method = 'GET', json }: Requ
   const data = res.status === 204 ? null : await res.json().catch(() => null)
   if (!res.ok) {
     const e = data?.error
+    const requestId = data?.request_id ?? undefined
     // Expired or revoked token on a protected route: drop the session and start over at the login page.
     if (res.status === 401 && !path.startsWith('/auth/')) {
       saveSession(null)
       window.location.assign('/login')
     }
-    throw new ApiError(res.status, e?.code ?? 'UNKNOWN', e?.message ?? 'Something went wrong. Try again.', e?.details)
+    throw new ApiError(
+      res.status,
+      e?.code ?? (res.status >= 500 ? 'SERVER_ERROR' : 'UNKNOWN'),
+      e?.message ?? 'Something went wrong. Try again.',
+      e?.details,
+      requestId,
+    )
   }
   return data as T
 }

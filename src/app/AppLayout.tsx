@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '@/core/auth'
 import { tracks } from '@/core/tracks/registry'
 import { Button, Text, ThemeToggle } from '@/ui'
@@ -7,6 +7,7 @@ import styles from './AppLayout.module.css'
 export function AppLayout() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   async function onSignOut() {
     await signOut()
@@ -15,6 +16,8 @@ export function AppLayout() {
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
     [styles.navLink, isActive && styles.active].filter(Boolean).join(' ')
+
+  const isDocDesk = location.pathname.startsWith('/tracks/docdesk')
 
   return (
     <div className={styles.shell}>
@@ -31,14 +34,23 @@ export function AppLayout() {
           ))}
         </nav>
         <div className={styles.actions}>
-          {user && <Text as="span" size="sm" tone="textMuted" className={styles.user}>{user.name}</Text>}
+          {user && (
+            <Link
+              to="/profile"
+              className={styles.userLink}
+              aria-label={`${user.name} – View profile`}
+              data-testid="profile-trigger"
+            >
+              <Text as="span" size="sm" tone="textMuted" className={styles.user}>{user.name}</Text>
+            </Link>
+          )}
           <ThemeToggle />
           <Button variant="secondary" size="sm" onClick={onSignOut} data-testid="sign-out">
             Sign out
           </Button>
         </div>
       </header>
-      <main className={styles.main}>
+      <main className={[styles.main, isDocDesk && styles.mainDocDesk].filter(Boolean).join(' ')}>
         <Outlet />
       </main>
     </div>

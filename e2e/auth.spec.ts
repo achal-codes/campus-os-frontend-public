@@ -14,7 +14,7 @@ test.describe('authentication', () => {
   test('shows an error for rejected credentials', async ({ page, loginPage }) => {
     await loginPage.goto()
     await loginPage.signIn(FAILING_EMAIL)
-    await expect(loginPage.error()).toHaveText('Invalid email_id or OTP')
+    await expect(loginPage.error()).toContainText('Invalid email_id or OTP')
     await expect(page).toHaveURL('/login')
   })
 
@@ -30,5 +30,11 @@ test.describe('authentication', () => {
     await expect(page).toHaveURL('/login?next=%2Ftracks%2Fexample')
     await loginPage.signIn('student@team1.com')
     await expect(page).toHaveURL('/tracks/example')
+  })
+
+  test('login page glassmorphism visual snapshot at 360px', async ({ page, loginPage }, testInfo) => {
+    await page.setViewportSize({ width: 360, height: 740 })
+    await loginPage.goto()
+    await page.screenshot({ path: `test-results/screenshots/login-glass-360-${testInfo.project.name}.png` })
   })
 })

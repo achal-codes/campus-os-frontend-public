@@ -1,0 +1,91 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+
+.strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--color-text-muted);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.stepActive {
+  color: var(--color-primary) !important;
+  font-weight: 700 !important;
+}
+
+.stepActive .badge {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast, #ffffff);
+}
+
+.stepCompleted {
+  color: var(--color-success) !important;
+  font-weight: 600;
+}
+
+.stepCompleted .badge {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.stepDate {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.arrow {
+  color: var(--color-border);
+  font-weight: normal;
+}
+
+.tatLine {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  padding-left: 4px;
+}
+
+.overdueText {
+  color: var(--color-danger);
+  font-weight: 700;
+}

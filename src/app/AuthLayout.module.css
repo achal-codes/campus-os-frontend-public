@@ -1,20 +1,18 @@
 .page {
-  min-height: 100svh;
+  min-height: 100dvh;
+  min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: var(--space-8) var(--space-4);
-  background:
-    radial-gradient(circle at 20% 0%, var(--color-primary-subtle), transparent 50%),
-    var(--color-bg);
+  padding: 16px;
+  background-color: var(--color-bg);
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .toggle {
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
-}
-
-.column {
-  width: 100%;
-  max-width: 420px;
+  z-index: 30;
 }
