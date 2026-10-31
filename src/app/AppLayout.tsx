@@ -38,7 +38,7 @@ export function AppLayout() {
             <Link
               to="/profile"
               className={styles.userLink}
-              aria-label="View profile"
+              aria-label={`${user.name} – View profile`}
               data-testid="profile-trigger"
             >
               <Text as="span" size="sm" tone="textMuted" className={styles.user}>{user.name}</Text>

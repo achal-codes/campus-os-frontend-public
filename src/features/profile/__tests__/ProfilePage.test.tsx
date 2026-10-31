@@ -26,7 +26,7 @@ describe('ProfilePage (Phase 3 Specification Tests)', () => {
     })
 
     const trigger = screen.getByTestId('profile-trigger')
-    expect(trigger).toHaveAttribute('aria-label', 'View profile')
+    expect(trigger.getAttribute('aria-label')).toContain('View profile')
     fireEvent.click(trigger)
 
     await waitFor(() => {

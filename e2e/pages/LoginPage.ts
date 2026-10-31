@@ -9,7 +9,7 @@ export class LoginPage {
 
   readonly email = () => this.page.getByLabel('Email')
   readonly otp = () => this.page.getByLabel('OTP', { exact: true })
-  readonly submit = () => this.page.getByRole('button', { name: 'Sign in' })
+  readonly submit = () => this.page.getByRole('button', { name: 'Sign in', exact: true })
   readonly error = () => this.page.getByTestId('login-error')
 
   async goto(next?: string) {

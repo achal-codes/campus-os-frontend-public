@@ -27,3 +27,4 @@ export async function getProfile(role: Role): Promise<ProfileData> {
   }
   return apiRequest<ProfileData>('/users/me')
 }
+
