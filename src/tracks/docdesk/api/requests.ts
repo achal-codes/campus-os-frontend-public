@@ -1,7 +1,7 @@
 import { apiRequest } from '@/core/api'
 import type {
   DocRequest, PaginatedResponse, CreateRequestBody,
-  EditRequestBody, CreateAnswerBody, SetTATBody, BulkTATBody,
+  EditRequestBody, SetTATBody, BulkTATBody,
   RequestFilters,
 } from '../types'
 import { apiUpload, apiDownload } from './http'
@@ -40,19 +40,13 @@ export function withdrawRequest(requestId: string): Promise<void> {
   return apiRequest<void>(`${BASE}/${requestId}`, { method: 'DELETE' })
 }
 
-/** Create an answer (message-only JSON) */
-export function createAnswerMessage(requestId: string, body: CreateAnswerBody): Promise<DocRequest> {
-  return apiRequest<DocRequest>(`${BASE}/${requestId}/answer`, { method: 'POST', json: body })
-}
-
-/** Create an answer with optional document (multipart/form-data) */
+/** Create an answer with optional document (always multipart/form-data per backend OpenAPI contract) */
 export function createAnswer(requestId: string, message: string, document?: File): Promise<DocRequest> {
-  if (!document) {
-    return createAnswerMessage(requestId, { message })
-  }
   const form = new FormData()
   form.append('message', message)
-  form.append('document', document)
+  if (document) {
+    form.append('document', document)
+  }
   return apiUpload<DocRequest>(`${BASE}/${requestId}/answer`, form, 'POST')
 }
 
@@ -69,8 +63,8 @@ export function editAnswer(
 }
 
 /** Withdraw an answer (reverts request to pending) */
-export function withdrawAnswer(requestId: string): Promise<void> {
-  return apiRequest<void>(`${BASE}/${requestId}/answer`, { method: 'DELETE' })
+export function withdrawAnswer(requestId: string): Promise<DocRequest> {
+  return apiRequest<DocRequest>(`${BASE}/${requestId}/answer`, { method: 'DELETE' })
 }
 
 /** Acknowledge an answered request */
@@ -98,8 +92,8 @@ export function downloadFilledForm(requestId: string): Promise<void> {
 }
 
 /** Delete filled form */
-export function deleteFilledForm(requestId: string): Promise<void> {
-  return apiRequest<void>(`${BASE}/${requestId}/filled-form`, { method: 'DELETE' })
+export function deleteFilledForm(requestId: string): Promise<DocRequest> {
+  return apiRequest<DocRequest>(`${BASE}/${requestId}/filled-form`, { method: 'DELETE' })
 }
 
 /** Set TAT for a single request */
@@ -108,6 +102,6 @@ export function setTAT(requestId: string, body: SetTATBody): Promise<DocRequest>
 }
 
 /** Set TAT for multiple requests in bulk */
-export function setBulkTAT(body: BulkTATBody): Promise<void> {
-  return apiRequest<void>(`${BASE}/bulk-tat`, { method: 'POST', json: body })
+export function setBulkTAT(body: BulkTATBody): Promise<{ items: DocRequest[]; count: number }> {
+  return apiRequest<{ items: DocRequest[]; count: number }>(`${BASE}/bulk-tat`, { method: 'POST', json: body })
 }
