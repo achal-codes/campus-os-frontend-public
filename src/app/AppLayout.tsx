@@ -34,7 +34,16 @@ export function AppLayout() {
           ))}
         </nav>
         <div className={styles.actions}>
-          {user && <Text as="span" size="sm" tone="textMuted" className={styles.user}>{user.name}</Text>}
+          {user && (
+            <Link
+              to="/profile"
+              className={styles.userLink}
+              aria-label="View profile"
+              data-testid="profile-trigger"
+            >
+              <Text as="span" size="sm" tone="textMuted" className={styles.user}>{user.name}</Text>
+            </Link>
+          )}
           <ThemeToggle />
           <Button variant="secondary" size="sm" onClick={onSignOut} data-testid="sign-out">
             Sign out

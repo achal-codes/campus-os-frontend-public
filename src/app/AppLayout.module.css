@@ -59,6 +59,21 @@
   gap: var(--space-2);
 }
 
+.userLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  color: inherit;
+}
+
+.userLink:hover,
+.userLink:focus-visible {
+  background: var(--color-surface-muted);
+}
+
 .main {
   flex: 1;
   width: 100%;
@@ -79,7 +94,11 @@
   }
 
   .user {
-    display: none;
+    display: inline-block;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mainDocDesk {

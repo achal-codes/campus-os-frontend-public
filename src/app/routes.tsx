@@ -5,6 +5,7 @@ import { tracks as registeredTracks } from '@/core/tracks/registry'
 import { Spinner } from '@/ui'
 import { CreateUserPage } from '@/features/admin/CreateUserPage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { ProfilePage } from '@/features/profile/ProfilePage'
 import { AppLayout } from './AppLayout'
 import { AuthLayout } from './AuthLayout'
 import { HomePage } from './HomePage'
@@ -27,6 +28,7 @@ export function buildRoutes(tracks: TrackManifest[] = registeredTracks): RouteOb
       ),
       children: [
         { path: '/', element: <HomePage /> },
+        { path: '/profile', element: <ProfilePage /> },
         {
           path: '/admin',
           element: (
