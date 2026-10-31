@@ -111,14 +111,6 @@ export function LoginPage() {
 
   return (
     <div className={styles.wrapper}>
-      {/* Soft blurred ambient blobs behind the card */}
-      <div className={styles.ambientBlobs} aria-hidden="true">
-        <div className={styles.blob1} />
-        <div className={styles.blob2} />
-        <div className={styles.blob3} />
-      </div>
-
-      {/* Centered Glass Card */}
       <div className={styles.card}>
         {/* 1. Small brand wordmark */}
         <div className={styles.brandRow}>

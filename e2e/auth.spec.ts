@@ -31,4 +31,10 @@ test.describe('authentication', () => {
     await loginPage.signIn('student@team1.com')
     await expect(page).toHaveURL('/tracks/example')
   })
+
+  test('login page flat card visual snapshot at 360px', async ({ page, loginPage }, testInfo) => {
+    await page.setViewportSize({ width: 360, height: 740 })
+    await loginPage.goto()
+    await page.screenshot({ path: `test-results/screenshots/login-flat-360-${testInfo.project.name}.png` })
+  })
 })
