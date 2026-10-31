@@ -64,6 +64,37 @@ export function StaffQueueScreen() {
     loadTypes()
   }, [])
 
+  useEffect(() => {
+    let active = true
+    async function fetchQueue() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await listRequests({
+          status: (statusFilter as RequestStatus) || undefined,
+          doc_type_id: docTypeFilter || undefined,
+          mine: scopeFilter === 'mine' ? true : undefined,
+          limit: 25,
+        })
+        if (active) {
+          setItems(res.items)
+          setNextCursor(res.next_cursor)
+          setSelectedIds(new Set())
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Failed to load queue')
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    fetchQueue()
+    return () => {
+      active = false
+    }
+  }, [statusFilter, docTypeFilter, scopeFilter])
+
   async function loadQueue(isRefresh = false) {
     if (!isRefresh) setLoading(true)
     setError(null)
@@ -84,11 +115,6 @@ export function StaffQueueScreen() {
     }
   }
 
-  useEffect(() => {
-    loadQueue()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, docTypeFilter, scopeFilter])
-
   async function handleLoadMore() {
     if (!nextCursor || loadingMore) return
     setLoadingMore(true)
@@ -100,7 +126,10 @@ export function StaffQueueScreen() {
         cursor: nextCursor,
         limit: 25,
       })
-      setItems((prev) => [...prev, ...res.items])
+      setItems((prev) => {
+        const seen = new Set(prev.map((i) => i.request_id))
+        return [...prev, ...res.items.filter((i) => !seen.has(i.request_id))]
+      })
       setNextCursor(res.next_cursor)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load more records')

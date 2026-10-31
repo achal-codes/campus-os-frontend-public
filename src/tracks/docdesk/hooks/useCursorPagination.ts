@@ -46,7 +46,10 @@ export function useCursorPagination<T>(
     setError(null)
     try {
       const res = await fetcher(nextCursor)
-      setItems((prev) => [...prev, ...res.items])
+      setItems((prev) => {
+        const seen = new Set(prev.map((i: any) => i.request_id ?? i.id ?? JSON.stringify(i)))
+        return [...prev, ...res.items.filter((i: any) => !seen.has(i.request_id ?? i.id ?? JSON.stringify(i)))]
+      })
       setNextCursor(res.next_cursor)
       setCount(res.count)
     } catch (err) {

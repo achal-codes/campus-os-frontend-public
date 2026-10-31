@@ -30,18 +30,51 @@ export function AdminOverviewScreen() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let active = true
     async function loadTypes() {
       try {
         const res = await listDocTypes()
-        setDocTypes(res.items)
+        if (active) setDocTypes(res.items)
       } catch {
         // silent fallback
       }
     }
     loadTypes()
+    return () => {
+      active = false
+    }
   }, [])
 
-  async function loadData() {
+  useEffect(() => {
+    let active = true
+    async function loadData() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await listRequests({
+          status: (statusFilter as RequestStatus) || undefined,
+          doc_type_id: docTypeFilter || undefined,
+          limit: 25,
+        })
+        if (active) {
+          setItems(res.items)
+          setNextCursor(res.next_cursor)
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Failed to load requests')
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    loadData()
+    return () => {
+      active = false
+    }
+  }, [statusFilter, docTypeFilter])
+
+  async function handleRefresh() {
     setLoading(true)
     setError(null)
     try {
@@ -59,11 +92,6 @@ export function AdminOverviewScreen() {
     }
   }
 
-  useEffect(() => {
-    loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, docTypeFilter])
-
   async function handleLoadMore() {
     if (!nextCursor || loadingMore) return
     setLoadingMore(true)
@@ -74,7 +102,10 @@ export function AdminOverviewScreen() {
         cursor: nextCursor,
         limit: 25,
       })
-      setItems((prev) => [...prev, ...res.items])
+      setItems((prev) => {
+        const seen = new Set(prev.map((i) => i.request_id))
+        return [...prev, ...res.items.filter((i) => !seen.has(i.request_id))]
+      })
       setNextCursor(res.next_cursor)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load more records')
@@ -134,7 +165,7 @@ export function AdminOverviewScreen() {
               />
             </div>
 
-            <Button variant="secondary" onClick={loadData}>
+            <Button variant="secondary" onClick={handleRefresh}>
               ↻ Refresh
             </Button>
           </div>
