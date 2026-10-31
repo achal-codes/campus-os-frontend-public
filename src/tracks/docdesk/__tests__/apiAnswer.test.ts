@@ -30,3 +30,4 @@ describe('createAnswer API contract (BUG-01)', () => {
     expect(formData.get('document')).toBeNull()
   })
 })
+

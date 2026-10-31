@@ -36,3 +36,4 @@ describe('useCursorPagination (BUG-04 deduplication & pagination state)', () => 
     expect(result.current.hasMore).toBe(false)
   })
 })
+

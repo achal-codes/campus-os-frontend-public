@@ -36,3 +36,4 @@ describe('Modal Escape key dismiss (BUG-06)', () => {
     expect(handleClose).toHaveBeenCalledTimes(1)
   })
 })
+
