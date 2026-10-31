@@ -5,7 +5,7 @@ import { listRequests, setBulkTAT } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glass from '../theme/glass.module.css'
+import { showToast } from '../components/Toast'
 import type { DocRequest } from '../types'
 import { addDaysIST, formatDate, todayIST } from '../utils/time'
 import styles from './BulkTATScreen.module.css'
@@ -106,6 +106,7 @@ export function BulkTATScreen() {
         note: note.trim() || undefined,
       })
       setSuccess(`${count} requests updated`)
+      showToast('Turnaround time saved')
       setTimeout(() => {
         navigate('/tracks/docdesk/staff')
       }, 1500)
@@ -186,13 +187,13 @@ export function BulkTATScreen() {
         {success && <Alert tone="success">{success}</Alert>}
 
         {loading ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={styles.panel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Spinner label="Loading pending requests..." />
           </div>
         ) : (
           <div className={styles.grid}>
             {/* Panel A: PENDING REQUESTS */}
-            <div className={`${glass.panel} ${glass.tintBlue}`}>
+            <div className={styles.panel}>
               <div className={styles.panelHeader}>
                 <Stack gap={1}>
                   <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -305,14 +306,24 @@ export function BulkTATScreen() {
             </div>
 
             {/* Panel B: APPLY TURNAROUND TIME */}
-            <div className={`${glass.panel} ${glass.tintBlue}`}>
+            <div className={styles.panel}>
               <form onSubmit={handleSubmit} noValidate>
                 <Stack gap={4}>
                   <div className={styles.panelHeader}>
                     <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       APPLY TURNAROUND TIME
                     </Text>
-                    <span className={glass.badge} data-testid="bulk-selected-count">
+                    <span
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: 'var(--text-xs)',
+                        fontWeight: 'var(--weight-bold)',
+                        background: 'var(--color-surface-muted)',
+                        border: '1px solid var(--color-border)',
+                      }}
+                      data-testid="bulk-selected-count"
+                    >
                       {selectedIds.size} Selected
                     </span>
                   </div>
@@ -337,9 +348,9 @@ export function BulkTATScreen() {
                         style={{
                           padding: '2px 8px',
                           fontSize: '0.75rem',
-                          borderRadius: 6,
-                          border: '1px solid rgba(170, 59, 255, 0.3)',
-                          background: 'rgba(170, 59, 255, 0.08)',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--color-border)',
+                          background: 'var(--color-surface-muted)',
                           cursor: 'pointer',
                           color: 'var(--color-text)',
                         }}
@@ -352,9 +363,9 @@ export function BulkTATScreen() {
                         style={{
                           padding: '2px 8px',
                           fontSize: '0.75rem',
-                          borderRadius: 6,
-                          border: '1px solid rgba(170, 59, 255, 0.3)',
-                          background: 'rgba(170, 59, 255, 0.08)',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--color-border)',
+                          background: 'var(--color-surface-muted)',
                           cursor: 'pointer',
                           color: 'var(--color-text)',
                         }}
@@ -367,9 +378,9 @@ export function BulkTATScreen() {
                         style={{
                           padding: '2px 8px',
                           fontSize: '0.75rem',
-                          borderRadius: 6,
-                          border: '1px solid rgba(170, 59, 255, 0.3)',
-                          background: 'rgba(170, 59, 255, 0.08)',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--color-border)',
+                          background: 'var(--color-surface-muted)',
                           cursor: 'pointer',
                           color: 'var(--color-text)',
                         }}
@@ -389,7 +400,7 @@ export function BulkTATScreen() {
                     data-testid="bulk-tat-note-input"
                   />
 
-                  {/* Wireframe Rules Box */}
+                  {/* Rules Box */}
                   <div className={styles.rulesBox}>
                     <p style={{ margin: 0, fontWeight: 600 }}>Rules for Bulk Turnaround Time:</p>
                     <p style={{ margin: 0 }}>

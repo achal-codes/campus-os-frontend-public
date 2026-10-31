@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
-import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
+import { Alert, Button, Card, Stack, Text, TextArea } from '@/ui'
 import { createAnswer, editAnswer } from '../api/requests'
+import { showToast } from './Toast'
 import type { DocRequest } from '../types'
 import { ANSWER_DOC_ACCEPT, formatFileSize, validateAnswerDocument } from '../utils/files'
 
@@ -38,27 +39,18 @@ export function AnswerComposerModal({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty, submitting])
 
-  // ESC key dismissal (BUG-06)
+  // ESC key dismissal
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && !submitting) {
-        if (isDirty) {
-          if (window.confirm('You have unsaved changes. Discard?')) {
-            onClose()
-          }
-        } else {
-          onClose()
-        }
+        onClose()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isDirty, submitting, onClose])
+  }, [submitting, onClose])
 
   function handleCancel() {
-    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
-      return
-    }
     onClose()
   }
 
@@ -118,6 +110,7 @@ export function AnswerComposerModal({
       } else {
         await createAnswer(request.request_id, message.trim(), file ?? undefined)
       }
+      showToast('Answer sent')
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit official answer')
@@ -134,9 +127,7 @@ export function AnswerComposerModal({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -153,11 +144,13 @@ export function AnswerComposerModal({
 
             {error && <Alert tone="danger">{error}</Alert>}
 
-            <TextField
+            <TextArea
               label="Answer message *"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
+              rows={4}
+              maxLength={2000}
               hint="Initial answer requires a 1-2000 character message."
               data-testid="answer-message-input"
             />
@@ -227,7 +220,7 @@ export function AnswerComposerModal({
                 onDrop={handleDrop}
                 style={{
                   border: isDragging ? '2px dashed var(--color-primary)' : '1px dashed var(--color-border)',
-                  backgroundColor: isDragging ? 'rgba(170, 59, 255, 0.08)' : 'transparent',
+                  backgroundColor: 'var(--color-surface-muted)',
                   borderRadius: 'var(--radius-sm)',
                   padding: 'var(--space-3)',
                   textAlign: 'center',

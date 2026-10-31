@@ -4,9 +4,9 @@ import { Alert, Button, Spinner, Stack, Text } from '@/ui'
 import { downloadDocument, downloadFilledForm, getRequest } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { RequestCommunicationPanel } from '../components/RequestCommunicationPanel'
+import { RequestStepper } from '../components/RequestStepper'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glass from '../theme/glass.module.css'
 import type { DocRequest } from '../types'
 import { formatFileSize } from '../utils/files'
 import { formatDateTime } from '../utils/time'
@@ -91,7 +91,7 @@ export function AdminDetailScreen() {
       <div className={styles.container} data-testid="docdesk-admin-detail-screen">
         <div>
           <Link to="/tracks/docdesk/admin" className={styles.backLink}>
-            ← Back to Audit Overview
+            Back to Audit Overview
           </Link>
           <div className={styles.headerBar}>
             <Stack gap={1}>
@@ -112,9 +112,9 @@ export function AdminDetailScreen() {
                 borderRadius: 'var(--radius-sm)',
                 fontSize: 'var(--text-xs)',
                 fontWeight: 'var(--weight-bold)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                backgroundColor: 'var(--color-surface-muted)',
                 color: 'var(--color-danger)',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
+                border: '1px solid var(--color-border)',
               }}
             >
               ADMIN AUDIT MODE (MUTATION DISABLED)
@@ -122,10 +122,13 @@ export function AdminDetailScreen() {
           </div>
         </div>
 
+        {/* Stepper */}
+        <RequestStepper request={request} />
+
         {error && <Alert tone="danger">{error}</Alert>}
 
         {/* Metadata Panel */}
-        <div className={`${glass.panel} ${glass.tintBlue}`}>
+        <div className={styles.panel}>
           <Stack gap={4}>
             <Text as="h2" size="md" weight="bold">
               Requester Profile & Submission Data
@@ -185,7 +188,7 @@ export function AdminDetailScreen() {
 
         {/* Official Resolution on Record */}
         {request.answer && (
-          <div className={`${glass.panel} ${glass.tintBlue}`}>
+          <div className={styles.panel}>
             <Stack gap={3}>
               <Text as="h2" size="md" weight="bold">
                 Official Resolution on Record
@@ -220,7 +223,7 @@ export function AdminDetailScreen() {
                     loading={downloadingDoc}
                     data-testid="admin-download-doc"
                   >
-                    Download Document
+                    Download
                   </Button>
                 </div>
               )}
@@ -230,7 +233,7 @@ export function AdminDetailScreen() {
 
         {/* Requester Submitted Filled Form */}
         {request.filled_form && (
-          <div className={`${glass.panel} ${glass.tintBlue}`}>
+          <div className={styles.panel}>
             <Stack gap={3}>
               <Text as="h2" size="md" weight="bold">
                 Requester-Submitted Filled Form
@@ -253,7 +256,7 @@ export function AdminDetailScreen() {
                   loading={downloadingForm}
                   data-testid="admin-download-filled-form"
                 >
-                  Download Form
+                  Download Filled Form
                 </Button>
               </div>
             </Stack>

@@ -67,8 +67,15 @@ describe('RequestFormScreen', () => {
       { user: { id: 's1@campus.edu', name: 'Student One', email: 's1@campus.edu', role: 'student' } },
     )
 
-    const textarea = await screen.findByTestId('request-reason-input')
+    const select = await screen.findByTestId('doctype-select')
+    const textarea = screen.getByTestId('request-reason-input')
     const submitBtn = screen.getByTestId('submit-request-button')
+
+    // Submit is disabled initially because no doc type is selected
+    expect(submitBtn).toBeDisabled()
+
+    // Select document type
+    fireEvent.change(select, { target: { value: 'DT-ACTIVE-1' } })
 
     // Empty or short reason (< 5 chars) keeps submit disabled
     fireEvent.change(textarea, { target: { value: 'abc' } })

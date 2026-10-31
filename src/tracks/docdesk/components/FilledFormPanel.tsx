@@ -2,6 +2,8 @@ import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { ApiError } from '@/core/api'
 import { Alert, Button, Stack, Text } from '@/ui'
 import { deleteFilledForm, downloadFilledForm, uploadFilledForm } from '../api/requests'
+import { ConfirmModal } from './ConfirmModal'
+import { showToast } from './Toast'
 import { can } from '../permissions/permissions'
 import type { DocRequest } from '../types'
 import { FILLED_FORM_ACCEPT, formatFileSize, validateFilledForm } from '../utils/files'
@@ -25,6 +27,7 @@ export function FilledFormPanel({
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -79,6 +82,7 @@ export function FilledFormPanel({
     try {
       await uploadFilledForm(request.request_id, selectedFile)
       setSelectedFile(null)
+      showToast('Filled form uploaded')
       onUpdated()
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -111,13 +115,13 @@ export function FilledFormPanel({
     }
   }
 
-  async function handleDelete() {
-    if (!window.confirm('Remove your filled form? This cannot be undone.')) return
-
+  async function handleConfirmDelete() {
     setError(null)
     setDeleting(true)
     try {
       await deleteFilledForm(request.request_id)
+      setShowDeleteModal(false)
+      showToast('Document removed')
       onUpdated()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed')
@@ -131,10 +135,10 @@ export function FilledFormPanel({
       <Stack gap={3}>
         <Stack gap={1}>
           <Text as="h3" size="sm" weight="bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text)' }}>
-            OPTIONAL: FILLED-IN FORM (ONLY IF STAFF ATTACHED A DOCUMENT)
+            Filled-in form
           </Text>
           <Text size="xs" tone="textMuted">
-            Choose completed PDF / DOCX / JPEG / PNG (max 10 MB)
+            Upload your completed PDF, DOCX, JPEG, or PNG (max 10 MB).
           </Text>
         </Stack>
 
@@ -161,14 +165,14 @@ export function FilledFormPanel({
                   loading={downloading}
                   data-testid="download-filled-form"
                 >
-                  Download
+                  Download Filled Form
                 </Button>
               )}
               {canDelete && (
                 <Button
                   size="sm"
                   variant="danger"
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteModal(true)}
                   loading={deleting}
                   data-testid="delete-filled-form"
                 >
@@ -243,9 +247,20 @@ export function FilledFormPanel({
         )}
 
         <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic', marginTop: '4px' }}>
-          After upload: you can download or remove your filled form before acknowledgement. After acknowledgement: view/download only; no further upload, removal or acknowledgement.
+          You can download or remove your filled form before acknowledging receipt.
         </Text>
       </Stack>
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Remove filled form"
+        message="Remove your filled form? This cannot be undone."
+        confirmLabel="Remove"
+        confirmVariant="danger"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   )
 }

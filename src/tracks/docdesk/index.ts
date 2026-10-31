@@ -6,7 +6,7 @@ export default defineTrack({
   title: 'DocDesk',
   description: 'Digital document request and management system for educational institutions.',
   team: 'Team 24',
-  icon: '📄',
+  icon: 'DD',
   navLabel: 'DocDesk',
   routes,
 })

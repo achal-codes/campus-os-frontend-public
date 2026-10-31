@@ -3,16 +3,17 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '@/core/auth'
 import { Alert, Button, Spinner, Text } from '@/ui'
 import { acknowledgeRequest, downloadDocument, getRequest, withdrawRequest } from '../api/requests'
+import { ConfirmModal } from '../components/ConfirmModal'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { EditRequestModal } from '../components/EditRequestModal'
 import { FilledFormPanel } from '../components/FilledFormPanel'
-import { LifecycleStrip } from '../components/LifecycleStrip'
 import { RequestCommunicationPanel } from '../components/RequestCommunicationPanel'
+import { RequestStepper } from '../components/RequestStepper'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
+import { showToast } from '../components/Toast'
 import { useProfile } from '../hooks/useProfile'
 import { can } from '../permissions/permissions'
-import glassStyles from '../theme/glass.module.css'
 import type { DocRequest } from '../types'
 import { formatFileSize } from '../utils/files'
 import { formatDate, formatDateTime } from '../utils/time'
@@ -29,6 +30,9 @@ export function RequestDetailScreen() {
   const [error, setError] = useState<string | null>(null)
 
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
+  const [showAckConfirm, setShowAckConfirm] = useState(false)
+
   const [downloadingDoc, setDownloadingDoc] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
   const [acknowledging, setAcknowledging] = useState(false)
@@ -124,29 +128,26 @@ export function RequestDetailScreen() {
     }
   }
 
-  async function handleWithdraw() {
-    if (!window.confirm('Withdraw this request? This cannot be undone.')) {
-      return
-    }
-
+  async function handleConfirmWithdraw() {
     setWithdrawing(true)
     try {
       await withdrawRequest(request!.request_id)
+      setShowWithdrawConfirm(false)
+      showToast('Request withdrawn')
       navigate('/tracks/docdesk/my-requests')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to withdraw request')
+    } finally {
       setWithdrawing(false)
     }
   }
 
-  async function handleAcknowledge() {
-    if (!window.confirm("Acknowledge receipt? You won't be able to upload or change anything after this.")) {
-      return
-    }
-
+  async function handleConfirmAcknowledge() {
     setAcknowledging(true)
     try {
       await acknowledgeRequest(request!.request_id)
+      setShowAckConfirm(false)
+      showToast('Acknowledged')
       await loadData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to acknowledge request')
@@ -161,8 +162,8 @@ export function RequestDetailScreen() {
   return (
     <DocDeskLayout>
       <div className={styles.container} data-testid="docdesk-request-detail-screen">
-        {/* Header Bar with Breadcrumb and Title (§4.2 / §4.3) */}
-        <div className={`${glassStyles.glassPanel} ${styles.headerBar}`}>
+        {/* Header Bar with Breadcrumb and Title */}
+        <div className={styles.headerBar}>
           <div className={styles.titleArea}>
             <div className={styles.breadcrumb}>
               <Link to="/tracks/docdesk/my-requests" className={styles.breadcrumbLink}>
@@ -194,7 +195,7 @@ export function RequestDetailScreen() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={handleAcknowledge}
+                onClick={() => setShowAckConfirm(true)}
                 loading={acknowledging}
                 data-testid="acknowledge-request-button"
               >
@@ -204,22 +205,17 @@ export function RequestDetailScreen() {
           </div>
         </div>
 
-        {/* 3-Step Progress Map (§3.8) */}
-        <LifecycleStrip
-          status={request.status}
-          submittedAt={request.created_at}
-          answeredAt={request.answer?.answered_at}
-          tat={request.tat}
-        />
+        {/* Request Stepper */}
+        <RequestStepper request={request} />
 
         {error && <Alert tone="danger">{error}</Alert>}
 
-        {/* SCREEN 3: Pending Request Details */}
+        {/* Pending Request Details */}
         {isPending && (
           <>
             <div className={styles.twoPanelGrid}>
               {/* Overline 1: REQUEST INFORMATION */}
-              <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+              <div className={styles.panelContent}>
                 <div className={styles.overline}>REQUEST INFORMATION</div>
                 <div className={styles.metaGrid}>
                   <div className={styles.metaItem}>
@@ -247,7 +243,7 @@ export function RequestDetailScreen() {
               </div>
 
               {/* Overline 2: TURNAROUND TIME (IF SET) */}
-              <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+              <div className={styles.panelContent}>
                 <div className={styles.overline}>TURNAROUND TIME (IF SET)</div>
                 {request.tat ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -281,7 +277,7 @@ export function RequestDetailScreen() {
             </div>
 
             {/* Overline 3: AVAILABLE REQUESTER ACTIONS */}
-            <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+            <div className={styles.panelContent}>
               <div className={styles.overline}>AVAILABLE REQUESTER ACTIONS</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div className={styles.actionRow}>
@@ -302,7 +298,7 @@ export function RequestDetailScreen() {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={handleWithdraw}
+                    onClick={() => setShowWithdrawConfirm(true)}
                     loading={withdrawing}
                     disabled={!canWithdraw}
                     data-testid="withdraw-request-button"
@@ -315,11 +311,11 @@ export function RequestDetailScreen() {
           </>
         )}
 
-        {/* SCREEN 4: Answered and Acknowledged Request Details */}
+        {/* Answered and Acknowledged Request Details */}
         {isAnsweredOrAck && (
           <>
             {/* Request Summary Card */}
-            <div className={`${glassStyles.glassPanel} ${styles.summaryCard}`}>
+            <div className={styles.summaryCard}>
               <div className={styles.overline}>REQUEST SUMMARY</div>
               <div className={styles.metaGrid}>
                 <div className={styles.metaItem}>
@@ -345,7 +341,7 @@ export function RequestDetailScreen() {
 
             <div className={styles.twoPanelGrid}>
               {/* Left Panel: STUDENT AFFAIRS RESPONSE */}
-              <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+              <div className={styles.panelContent}>
                 <div className={styles.overline}>STUDENT AFFAIRS RESPONSE</div>
                 {request.answer ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -377,7 +373,7 @@ export function RequestDetailScreen() {
               </div>
 
               {/* Right Panel: DOCUMENT FROM STAFF */}
-              <div className={`${glassStyles.glassPanel} ${styles.panelContent}`}>
+              <div className={styles.panelContent}>
                 <div className={styles.overline}>DOCUMENT FROM STAFF</div>
                 {request.document ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -411,9 +407,9 @@ export function RequestDetailScreen() {
               </div>
             </div>
 
-            {/* Filled-Form Round Trip Panel (§4.3 — only if staff attached a document) */}
+            {/* Filled-Form Round Trip Panel (only if staff attached a document) */}
             {request.document && (
-              <div className={glassStyles.glassPanel} style={{ padding: '20px' }}>
+              <div className={styles.panelContent}>
                 <FilledFormPanel
                   request={request}
                   isOwner={request.requested_by === user?.email}
@@ -424,7 +420,7 @@ export function RequestDetailScreen() {
               </div>
             )}
 
-            {/* Acknowledged status helper message (§4.4) */}
+            {/* Acknowledged status helper message */}
             {request.status === 'acknowledged' && (
               <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '13px', padding: '12px' }}>
                 This request is closed.
@@ -434,7 +430,7 @@ export function RequestDetailScreen() {
         )}
 
         {/* Official Request Timeline Panel */}
-        <div className={glassStyles.glassPanel} style={{ padding: '20px' }}>
+        <div className={styles.panelContent}>
           <RequestCommunicationPanel request={request} />
         </div>
 
@@ -449,6 +445,30 @@ export function RequestDetailScreen() {
             }}
           />
         )}
+
+        {/* Withdraw Confirmation Modal */}
+        <ConfirmModal
+          isOpen={showWithdrawConfirm}
+          title="Withdraw request"
+          message="Withdraw this request? This cannot be undone."
+          confirmLabel="Withdraw"
+          confirmVariant="danger"
+          loading={withdrawing}
+          onConfirm={handleConfirmWithdraw}
+          onCancel={() => setShowWithdrawConfirm(false)}
+        />
+
+        {/* Acknowledge Confirmation Modal */}
+        <ConfirmModal
+          isOpen={showAckConfirm}
+          title="Acknowledge receipt"
+          message="Acknowledge receipt? You won't be able to upload or change anything after this."
+          confirmLabel="Acknowledge"
+          confirmVariant="primary"
+          loading={acknowledging}
+          onConfirm={handleConfirmAcknowledge}
+          onCancel={() => setShowAckConfirm(false)}
+        />
       </div>
     </DocDeskLayout>
   )

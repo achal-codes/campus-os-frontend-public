@@ -5,27 +5,27 @@
   margin-bottom: var(--space-6);
 }
 
+.statCardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .statCard {
   padding: var(--space-5);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-:global([data-theme='dark']) .statCard {
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--duration-fast);
 }
 
 .statCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-primary);
 }
 
 .statNumber {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
   color: var(--color-primary);
   margin-top: var(--space-2);
@@ -49,24 +49,12 @@
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--color-surface);
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s ease;
-}
-
-:global([data-theme='dark']) .listItem {
-  background: rgba(15, 23, 42, 0.5);
+  transition: border-color var(--duration-fast);
 }
 
 .listItem:hover {
   border-color: var(--color-primary);
-  transform: translateX(4px);
-  background: rgba(255, 255, 255, 0.6);
-}
-
-:global([data-theme='dark']) .listItem:hover {
-  background: rgba(30, 41, 59, 0.7);
 }

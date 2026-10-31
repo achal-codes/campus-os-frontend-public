@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Alert, Button, Card, SelectField, Stack, Text, TextField } from '@/ui'
+import { Alert, Button, Card, SelectField, Stack, Text, TextArea, TextField } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { editRequest } from '../api/requests'
+import { showToast } from './Toast'
 import type { DocRequest, DocType } from '../types'
 
 interface EditRequestModalProps {
@@ -48,27 +49,18 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty, submitting])
 
-  // ESC key dismissal (BUG-06)
+  // ESC key dismissal
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && !submitting) {
-        if (isDirty) {
-          if (window.confirm('You have unsaved changes. Discard?')) {
-            onClose()
-          }
-        } else {
-          onClose()
-        }
+        onClose()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isDirty, submitting, onClose])
+  }, [submitting, onClose])
 
   function handleCancel() {
-    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
-      return
-    }
     onClose()
   }
 
@@ -86,6 +78,7 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
         doc_type_id: docTypeId !== request.doc_type_id ? docTypeId : undefined,
         reason: reason.trim(),
       })
+      showToast('Request updated')
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update request')
@@ -110,9 +103,7 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -145,11 +136,13 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
               />
             )}
 
-            <TextField
+            <TextArea
               label="Reason for Request"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               required
+              rows={4}
+              maxLength={1000}
               hint="5 - 1000 characters describing your request."
               data-testid="edit-request-reason"
             />
@@ -159,7 +152,7 @@ export function EditRequestModal({ request, onClose, onSuccess }: EditRequestMod
                 Cancel
               </Button>
               <Button type="submit" loading={submitting} data-testid="save-request-button">
-                Save Changes
+                Edit Request
               </Button>
             </div>
           </Stack>

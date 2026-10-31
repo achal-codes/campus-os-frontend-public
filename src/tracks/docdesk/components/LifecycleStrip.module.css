@@ -1,35 +1,30 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   max-width: 100%;
 }
 
 .strip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 12px;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: auto;
 }
 
-:global([data-theme='dark']) .strip {
-  background: #1e293b;
-  border-color: #334155;
-}
-
 .step {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .stepHeader {
@@ -39,37 +34,58 @@
   font-weight: 500;
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
 .stepActive {
-  color: #4338ca !important;
+  color: var(--color-primary) !important;
   font-weight: 700 !important;
 }
 
-:global([data-theme='dark']) .stepActive {
-  color: #818cf8 !important;
+.stepActive .badge {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast, #ffffff);
 }
 
 .stepCompleted {
-  color: #15803d !important;
+  color: var(--color-success) !important;
   font-weight: 600;
+}
+
+.stepCompleted .badge {
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 
 .stepDate {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .arrow {
-  color: #cbd5e1;
-  font-weight: bold;
+  color: var(--color-border);
+  font-weight: normal;
 }
 
 .tatLine {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
   padding-left: 4px;
 }
 
 .overdueText {
-  color: #dc2626;
+  color: var(--color-danger);
   font-weight: 700;
 }

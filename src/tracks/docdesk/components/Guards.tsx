@@ -56,7 +56,7 @@ export function StudentAffairsGuard({ children }: GuardProps) {
                   Role: <code>{user?.role ?? 'none'}</code> {profile?.dept ? `· Department: ${profile.dept}` : ''}
                 </Text>
               </div>
-              <div style={{ background: 'rgba(170, 59, 255, 0.08)', border: '1px solid rgba(170, 59, 255, 0.2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ background: 'var(--color-surface-muted)', border: '1px solid var(--color-border)', padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)' }}>
                 <Text size="xs" weight="bold" tone="primary" style={{ marginBottom: 4 }}>
                   How to test or log in as Student Affairs:
                 </Text>
@@ -69,13 +69,13 @@ export function StudentAffairsGuard({ children }: GuardProps) {
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
                 <Link to="/tracks/docdesk" style={{ textDecoration: 'none' }}>
                   <Button variant="secondary" size="sm">
-                    ← Back to Requester Portal
+                    Back to Requester Portal
                   </Button>
                 </Link>
                 {user?.role === 'admin' && (
                   <Link to="/admin" style={{ textDecoration: 'none' }}>
                     <Button variant="primary" size="sm">
-                      Go to Admin User Management →
+                      Go to Admin User Management
                     </Button>
                   </Link>
                 )}

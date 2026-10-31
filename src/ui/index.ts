@@ -4,4 +4,5 @@ export { Card, Stack, Text, type CardProps, type StackProps, type TextProps } fr
 export { SelectField, type SelectFieldProps } from './SelectField'
 export { Spinner, type SpinnerProps } from './Spinner'
 export { PasswordField, TextField, type PasswordFieldProps, type TextFieldProps } from './TextField'
+export { TextArea, type TextAreaProps } from './TextArea'
 export { ThemeToggle } from './ThemeToggle'

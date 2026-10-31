@@ -29,18 +29,18 @@ export function LifecycleStrip({
         {/* Step 1: Submitted */}
         <div className={`${styles.step} ${isPending ? styles.stepActive : styles.stepCompleted}`}>
           <div className={styles.stepHeader}>
-            <span>{isPending ? '●' : '✓'}</span>
+            <span className={styles.badge}>1</span>
             <span>Submitted</span>
           </div>
           {submittedAt && <span className={styles.stepDate}>{formatDateOnly(submittedAt)}</span>}
         </div>
 
-        <span className={styles.arrow} aria-hidden="true">──▶</span>
+        <span className={styles.arrow} aria-hidden="true">&rarr;</span>
 
         {/* Step 2: Answered */}
         <div className={`${styles.step} ${isAnswered ? styles.stepActive : isAcknowledged ? styles.stepCompleted : ''}`}>
           <div className={styles.stepHeader}>
-            <span>{isAnswered ? '●' : isAcknowledged ? '✓' : '○'}</span>
+            <span className={styles.badge}>2</span>
             <span>Answered</span>
           </div>
           <span className={styles.stepDate}>
@@ -48,12 +48,12 @@ export function LifecycleStrip({
           </span>
         </div>
 
-        <span className={styles.arrow} aria-hidden="true">──▶</span>
+        <span className={styles.arrow} aria-hidden="true">&rarr;</span>
 
         {/* Step 3: Acknowledged */}
         <div className={`${styles.step} ${isAcknowledged ? styles.stepCompleted : ''}`}>
           <div className={styles.stepHeader}>
-            <span>{isAcknowledged ? '✓' : '○'}</span>
+            <span className={styles.badge}>3</span>
             <span>Acknowledged</span>
           </div>
           <span className={styles.stepDate}>
@@ -62,7 +62,7 @@ export function LifecycleStrip({
         </div>
       </div>
 
-      {/* TAT line if set (§3.8) */}
+      {/* TAT line if set */}
       {tat?.expected_by && (
         <div className={styles.tatLine}>
           Expected by {formatDateOnly(tat.expected_by)}

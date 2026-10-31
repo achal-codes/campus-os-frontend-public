@@ -1,11 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { ApiError } from '@/core/api'
-import { Alert, Button, Spinner, Text } from '@/ui'
+import { Alert, Button, Spinner, TextArea, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { createRequest } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
-import glassStyles from '../theme/glass.module.css'
+import { showToast } from '../components/Toast'
 import type { DocType } from '../types'
 import styles from './RequestFormScreen.module.css'
 
@@ -43,7 +43,12 @@ export function RequestFormScreen() {
         if (active) {
           const activeOnly = res.items.filter((d) => d.status === 'active')
           setDocTypes(activeOnly)
-          setSelectedDocTypeId((prev) => prev || (activeOnly.length > 0 ? activeOnly[0].doc_type_id : ''))
+          // Do not auto-select activeOnly[0]; require explicit user choice
+          if (preselectedDocTypeId && activeOnly.some((d) => d.doc_type_id === preselectedDocTypeId)) {
+            setSelectedDocTypeId(preselectedDocTypeId)
+          } else {
+            setSelectedDocTypeId('')
+          }
         }
       } catch (err) {
         if (active) {
@@ -57,7 +62,7 @@ export function RequestFormScreen() {
     return () => {
       active = false
     }
-  }, [])
+  }, [preselectedDocTypeId])
 
   const selectedDocType = docTypes.find((d) => d.doc_type_id === selectedDocTypeId)
 
@@ -65,7 +70,7 @@ export function RequestFormScreen() {
     e.preventDefault()
 
     if (!selectedDocTypeId) {
-      setError('Please select a valid document type.')
+      setError('Please select a document type.')
       return
     }
 
@@ -82,6 +87,7 @@ export function RequestFormScreen() {
         doc_type_id: selectedDocTypeId,
         reason: trimmedReason,
       })
+      showToast('Request submitted')
       navigate(`/tracks/docdesk/requests/${created.request_id}`)
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -98,11 +104,13 @@ export function RequestFormScreen() {
     }
   }
 
+  const isSubmitDisabled = submitting || !selectedDocTypeId || reason.trim().length < 5 || reason.length > 1000
+
   return (
     <DocDeskLayout activeItem="new">
       <div className={styles.pageContainer} data-testid="docdesk-request-form-screen">
-        <div className={`${glassStyles.glassPanel} ${styles.formCard}`}>
-          {/* Header (§4.1 / Wireframe 2) */}
+        <div className={styles.formCard}>
+          {/* Header */}
           <div className={styles.headerText}>
             <h1 className={styles.title}>Request a document</h1>
             <p className={styles.subtitle}>Submit a request for bonafide certificates, transcripts, or official letters.</p>
@@ -134,15 +142,13 @@ export function RequestFormScreen() {
                 </label>
                 <select
                   id="doctype-select"
-                  className={glassStyles.glassSelect}
+                  className={styles.select}
                   value={selectedDocTypeId}
                   onChange={(e) => setSelectedDocTypeId(e.target.value)}
                   required
                   data-testid="doctype-select"
                 >
-                  <option value="" disabled>
-                    Select an active document type
-                  </option>
+                  <option value="">Select a document type…</option>
                   {docTypes.map((dt) => (
                     <option key={dt.doc_type_id} value={dt.doc_type_id}>
                       {dt.name}
@@ -161,52 +167,28 @@ export function RequestFormScreen() {
                 )}
               </div>
 
-              {/* Reason Multiline Textarea */}
+              {/* Reason Multiline TextArea */}
               <div className={styles.fieldGroup}>
-                <div className={styles.fieldLabel}>
-                  <label htmlFor="reason-textarea">
-                    Reason<span className={styles.requiredMark}>*</span>
-                  </label>
-                  <span
-                    className={`${styles.charCounter} ${
-                      reason.length > 0 && (reason.trim().length < 5 || reason.length > 1000)
-                        ? styles.charCounterInvalid
-                        : ''
-                    }`}
-                    aria-live="polite"
-                  >
-                    ({reason.length}/1000)
-                  </span>
-                </div>
-                <textarea
+                <TextArea
                   id="reason-textarea"
-                  className={glassStyles.glassTextarea}
+                  label="Reason"
+                  required
                   rows={5}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   onBlur={() => setTouchedReason(true)}
                   placeholder="Needed for the scholarship application."
-                  required
                   minLength={5}
                   maxLength={1000}
-                  aria-invalid={touchedReason && (reason.trim().length < 5 || reason.length > 1000)}
-                  aria-describedby="reason-helper"
+                  hint="Required: 5-1000 characters"
+                  error={touchedReason && reason.trim().length > 0 && reason.trim().length < 5 ? 'Reason must be at least 5 characters' : undefined}
                   data-testid="request-reason-input"
                 />
-                <p id="reason-helper" className={styles.fieldHelper}>Required: 5-1000 characters</p>
               </div>
 
               {/* Form Action Controls */}
               <div className={styles.actionsRow}>
-                <Link
-                  to="/tracks/docdesk/my-requests"
-                  style={{ textDecoration: 'none' }}
-                  onClick={(e) => {
-                    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) {
-                      e.preventDefault()
-                    }
-                  }}
-                >
+                <Link to="/tracks/docdesk/my-requests" style={{ textDecoration: 'none' }}>
                   <Button type="button" variant="secondary" size="md">
                     Cancel
                   </Button>
@@ -216,7 +198,7 @@ export function RequestFormScreen() {
                   variant="primary"
                   size="md"
                   loading={submitting}
-                  disabled={submitting || reason.trim().length < 5}
+                  disabled={isSubmitDisabled}
                   data-testid="submit-request-button"
                 >
                   Submit Request

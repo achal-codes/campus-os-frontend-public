@@ -10,7 +10,7 @@ export function HomePage() {
   return (
     <Stack gap={7}>
       <Stack gap={2}>
-        <Text as="h1" size="2xl" weight="bold">Hi {user?.name ?? 'there'} 👋</Text>
+        <Text as="h1" size="2xl" weight="bold">Hi {user?.name ?? 'there'}</Text>
         <Text tone="textMuted">Pick a track to get started.</Text>
       </Stack>
 

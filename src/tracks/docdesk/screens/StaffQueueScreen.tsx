@@ -6,7 +6,6 @@ import { listRequests } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glass from '../theme/glass.module.css'
 import type { DocRequest, DocType, RequestStatus } from '../types'
 import { formatDate, formatDateTime } from '../utils/time'
 import styles from './StaffQueueScreen.module.css'
@@ -18,18 +17,13 @@ const STATUS_OPTIONS = [
   { value: 'acknowledged', label: 'Acknowledged' },
 ]
 
-const SCOPE_OPTIONS = [
-  { value: 'all', label: 'All requests' },
-  { value: 'mine', label: 'My requests' },
-]
-
 export function StaffQueueScreen() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [statusFilter, setStatusFilter] = useState<string>(() => searchParams.get('status') ?? 'pending')
   const [docTypeFilter, setDocTypeFilter] = useState<string>(() => searchParams.get('doc_type_id') ?? '')
-  const [scopeFilter, setScopeFilter] = useState<'all' | 'mine'>(() => (searchParams.get('scope') === 'mine' ? 'mine' : 'all'))
+  const [mineOnly, setMineOnly] = useState<boolean>(() => searchParams.get('mine') === 'true' || searchParams.get('scope') === 'mine')
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '')
   const [docTypes, setDocTypes] = useState<DocType[]>([])
 
@@ -46,10 +40,10 @@ export function StaffQueueScreen() {
     const params = new URLSearchParams()
     if (statusFilter) params.set('status', statusFilter)
     if (docTypeFilter) params.set('doc_type_id', docTypeFilter)
-    if (scopeFilter !== 'all') params.set('scope', scopeFilter)
+    if (mineOnly) params.set('mine', 'true')
     if (searchQuery) params.set('q', searchQuery)
     setSearchParams(params, { replace: true })
-  }, [statusFilter, docTypeFilter, scopeFilter, searchQuery, setSearchParams])
+  }, [statusFilter, docTypeFilter, mineOnly, searchQuery, setSearchParams])
 
   // Load doc types for filter
   useEffect(() => {
@@ -73,7 +67,7 @@ export function StaffQueueScreen() {
         const res = await listRequests({
           status: (statusFilter as RequestStatus) || undefined,
           doc_type_id: docTypeFilter || undefined,
-          mine: scopeFilter === 'mine' ? true : undefined,
+          mine: mineOnly ? true : undefined,
           limit: 25,
         })
         if (active) {
@@ -93,7 +87,7 @@ export function StaffQueueScreen() {
     return () => {
       active = false
     }
-  }, [statusFilter, docTypeFilter, scopeFilter])
+  }, [statusFilter, docTypeFilter, mineOnly])
 
   async function loadQueue(isRefresh = false) {
     if (!isRefresh) setLoading(true)
@@ -102,7 +96,7 @@ export function StaffQueueScreen() {
       const res = await listRequests({
         status: (statusFilter as RequestStatus) || undefined,
         doc_type_id: docTypeFilter || undefined,
-        mine: scopeFilter === 'mine' ? true : undefined,
+        mine: mineOnly ? true : undefined,
         limit: 25,
       })
       setItems(res.items)
@@ -122,7 +116,7 @@ export function StaffQueueScreen() {
       const res = await listRequests({
         status: (statusFilter as RequestStatus) || undefined,
         doc_type_id: docTypeFilter || undefined,
-        mine: scopeFilter === 'mine' ? true : undefined,
+        mine: mineOnly ? true : undefined,
         cursor: nextCursor,
         limit: 25,
       })
@@ -186,11 +180,11 @@ export function StaffQueueScreen() {
   function handleClearFilters() {
     setStatusFilter('')
     setDocTypeFilter('')
-    setScopeFilter('all')
+    setMineOnly(false)
     setSearchQuery('')
   }
 
-  const hasActiveFilters = Boolean(statusFilter || docTypeFilter || scopeFilter !== 'all' || searchQuery)
+  const hasActiveFilters = Boolean(statusFilter || docTypeFilter || mineOnly || searchQuery)
 
   return (
     <DocDeskLayout activeItem="queue">
@@ -212,13 +206,13 @@ export function StaffQueueScreen() {
               onClick={() => loadQueue(true)}
               data-testid="queue-refresh-button"
             >
-              ↻ Refresh
+              Refresh
             </Button>
           </div>
         </div>
 
         {/* Filter Requests Panel */}
-        <div className={`${glass.panel} ${glass.tintBlue} ${styles.filtersPanel}`}>
+        <div className={styles.filtersPanel}>
           <div className={styles.filterHeader}>
             <h2 className={styles.filterHeading}>Filter requests</h2>
             {hasActiveFilters && (
@@ -235,7 +229,7 @@ export function StaffQueueScreen() {
 
           <div className={styles.filterControls}>
             {/* Status Dropdown */}
-            <div style={{ minWidth: 160, flex: 1 }}>
+            <div style={{ minWidth: 140, flex: 1 }}>
               <SelectField
                 label="Status"
                 value={statusFilter}
@@ -246,7 +240,7 @@ export function StaffQueueScreen() {
             </div>
 
             {/* Document Type Dropdown */}
-            <div style={{ minWidth: 200, flex: 1.2 }}>
+            <div style={{ minWidth: 180, flex: 1.2 }}>
               <SelectField
                 label="Document type"
                 value={docTypeFilter}
@@ -256,19 +250,22 @@ export function StaffQueueScreen() {
               />
             </div>
 
-            {/* Request Scope Dropdown */}
-            <div style={{ minWidth: 180, flex: 1 }}>
+            {/* All / Mine Toggle */}
+            <div style={{ minWidth: 140, flex: 1 }}>
               <SelectField
-                label="Request scope"
-                value={scopeFilter}
-                options={SCOPE_OPTIONS}
-                onChange={(e) => setScopeFilter(e.target.value as 'all' | 'mine')}
+                label="Scope"
+                value={mineOnly ? 'mine' : 'all'}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'mine', label: 'Mine' },
+                ]}
+                onChange={(e) => setMineOnly(e.target.value === 'mine')}
                 data-testid="queue-scope-filter"
               />
             </div>
 
             {/* Search Input */}
-            <div style={{ minWidth: 200, flex: 1.2 }}>
+            <div style={{ minWidth: 180, flex: 1.2 }}>
               <TextField
                 label="Search loaded requests"
                 value={searchQuery}
@@ -300,13 +297,13 @@ export function StaffQueueScreen() {
                   Type: {docTypes.find((d) => d.doc_type_id === docTypeFilter)?.name ?? docTypeFilter} ✕
                 </button>
               )}
-              {scopeFilter !== 'all' && (
+              {mineOnly && (
                 <button
                   type="button"
                   className={styles.filterChip}
-                  onClick={() => setScopeFilter('all')}
+                  onClick={() => setMineOnly(false)}
                 >
-                  Scope: My requests ✕
+                  Scope: Mine ✕
                 </button>
               )}
               {searchQuery && (
@@ -327,7 +324,7 @@ export function StaffQueueScreen() {
               {selectedIds.size > 0 && ` · ${selectedIds.size} pending selected`}
             </Text>
             <Text size="xs" tone="textMuted" style={{ fontStyle: 'italic' }}>
-              My requests shows only requests you submitted yourself.
+              Mine shows only requests you submitted yourself.
             </Text>
           </div>
         </div>
@@ -339,11 +336,11 @@ export function StaffQueueScreen() {
         </p>
 
         {loading ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={styles.panel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Spinner label="Loading operational queue..." />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={styles.panel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Stack gap={2} style={{ alignItems: 'center' }}>
               <Text size="md" weight="medium">No requests match current filters</Text>
               <Text size="sm" tone="textMuted">
@@ -354,7 +351,7 @@ export function StaffQueueScreen() {
         ) : (
           <>
             {/* Desktop Table */}
-            <div className={`${glass.panel} ${glass.tintBlue} ${styles.desktopOnly}`}>
+            <div className={`${styles.panel} ${styles.desktopOnly}`}>
               <div className={styles.tableWrapper}>
                 <table className={styles.table} aria-label="Document requests table">
                   <thead>
@@ -448,7 +445,7 @@ export function StaffQueueScreen() {
                 return (
                   <div
                     key={r.request_id}
-                    className={`${glass.panel} ${glass.tintBlue} ${styles.mobileCard} ${isSelected ? styles.selectedRow : ''}`}
+                    className={`${styles.panel} ${styles.mobileCard} ${isSelected ? styles.selectedRow : ''}`}
                     data-testid={`queue-row-${r.request_id}`}
                   >
                     <div className={styles.mobileCardHeader}>
@@ -507,7 +504,7 @@ export function StaffQueueScreen() {
                   onClick={handleNavigateBulk}
                   data-testid="bulk-tat-button"
                 >
-                  Set turnaround time
+                  Set TAT for Selected
                 </Button>
               </div>
             )}

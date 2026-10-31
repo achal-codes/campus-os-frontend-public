@@ -129,7 +129,7 @@ export function DocDeskTopbar() {
             onClick={toggleTheme}
             aria-label={`Toggle theme: current ${mode}`}
           >
-            {mode === 'dark' ? '☀️' : '🌙'}
+            {mode === 'dark' ? 'Light' : 'Dark'}
           </button>
 
           <button

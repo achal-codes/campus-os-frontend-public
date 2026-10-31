@@ -7,7 +7,6 @@ import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
 import { useProfile } from '../hooks/useProfile'
-import glass from '../theme/glass.module.css'
 import type { DocRequest } from '../types'
 import { formatDate } from '../utils/time'
 import styles from './RequesterDashboardScreen.module.css'
@@ -16,6 +15,9 @@ export function RequesterDashboardScreen() {
   const { user } = useAuth()
   const { profile, isStudentAffairs } = useProfile()
   const [requests, setRequests] = useState<DocRequest[]>([])
+  const [pendingCount, setPendingCount] = useState(0)
+  const [answeredCount, setAnsweredCount] = useState(0)
+  const [acknowledgedCount, setAcknowledgedCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,9 +27,17 @@ export function RequesterDashboardScreen() {
       setLoading(true)
       setError(null)
       try {
-        const res = await listRequests({ mine: true, limit: 25 })
+        const [pendingRes, answeredRes, ackRes, listRes] = await Promise.all([
+          listRequests({ mine: true, status: 'pending', limit: 1 }),
+          listRequests({ mine: true, status: 'answered', limit: 1 }),
+          listRequests({ mine: true, status: 'acknowledged', limit: 1 }),
+          listRequests({ mine: true, limit: 5 }),
+        ])
         if (active) {
-          setRequests(res.items)
+          setPendingCount(pendingRes.count)
+          setAnsweredCount(answeredRes.count)
+          setAcknowledgedCount(ackRes.count)
+          setRequests(listRes.items)
         }
       } catch (err) {
         if (active) {
@@ -43,10 +53,6 @@ export function RequesterDashboardScreen() {
     }
   }, [])
 
-  const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const answeredCount = requests.filter((r) => r.status === 'answered').length
-  const acknowledgedCount = requests.filter((r) => r.status === 'acknowledged').length
-
   return (
     <DocDeskLayout activeItem="dashboard">
       <Stack gap={6} data-testid="docdesk-requester-dashboard">
@@ -57,8 +63,8 @@ export function RequesterDashboardScreen() {
             </Text>
             <Text tone="textMuted">
               Welcome, <strong>{profile?.name ?? user?.name ?? 'User'}</strong> ({user?.role})
-              {profile?.dept && ` • Department: ${profile.dept}`}
-              {profile?.usn && ` • USN: ${profile.usn}`}
+              {profile?.dept && ` · Department: ${profile.dept}`}
+              {profile?.usn && ` · USN: ${profile.usn}`}
             </Text>
           </Stack>
 
@@ -70,14 +76,14 @@ export function RequesterDashboardScreen() {
             </Link>
             <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
               <Button variant="primary" size="md" data-testid="new-request-button">
-                + Request Document
+                New Request
               </Button>
             </Link>
           </div>
         </div>
 
         {isStudentAffairs && (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ borderLeft: '4px solid var(--color-primary)', padding: 'var(--space-4)' }}>
+          <div style={{ borderLeft: '4px solid var(--color-primary)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
               <Stack gap={1}>
                 <Text size="md" weight="bold">Student Affairs Staff Operations</Text>
@@ -88,7 +94,7 @@ export function RequesterDashboardScreen() {
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
                 <Link to="/tracks/docdesk/staff" style={{ textDecoration: 'none' }}>
                   <Button variant="primary" size="md">
-                    Open Staff Queue →
+                    Open Staff Queue
                   </Button>
                 </Link>
                 <Link to="/tracks/docdesk/staff/dashboard" style={{ textDecoration: 'none' }}>
@@ -108,27 +114,33 @@ export function RequesterDashboardScreen() {
         )}
 
         {loading ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Spinner label="Loading your requests..." />
           </div>
         ) : (
           <>
             <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <Text size="sm" tone="textMuted">Pending Requests</Text>
-                <div className={styles.statNumber} data-testid="stat-pending">{pendingCount}</div>
-                <Text size="xs" tone="textMuted">Being processed by Student Affairs</Text>
-              </div>
-              <div className={styles.statCard}>
-                <Text size="sm" tone="textMuted">Ready for Acknowledgment</Text>
-                <div className={styles.statNumber} data-testid="stat-answered">{answeredCount}</div>
-                <Text size="xs" tone="textMuted">Document issued, awaiting verification</Text>
-              </div>
-              <div className={styles.statCard}>
-                <Text size="sm" tone="textMuted">Completed / Closed</Text>
-                <div className={styles.statNumber} data-testid="stat-acknowledged">{acknowledgedCount}</div>
-                <Text size="xs" tone="textMuted">Officially fulfilled and archived</Text>
-              </div>
+              <Link to="/tracks/docdesk/my-requests?status=pending" className={styles.statCardLink}>
+                <div className={styles.statCard}>
+                  <Text size="sm" tone="textMuted">Pending Requests</Text>
+                  <div className={styles.statNumber} data-testid="stat-pending">{pendingCount}</div>
+                  <Text size="xs" tone="textMuted">Being processed by Student Affairs</Text>
+                </div>
+              </Link>
+              <Link to="/tracks/docdesk/my-requests?status=answered" className={styles.statCardLink}>
+                <div className={styles.statCard}>
+                  <Text size="sm" tone="textMuted">Ready for Acknowledgment</Text>
+                  <div className={styles.statNumber} data-testid="stat-answered">{answeredCount}</div>
+                  <Text size="xs" tone="textMuted">Document issued, awaiting verification</Text>
+                </div>
+              </Link>
+              <Link to="/tracks/docdesk/my-requests?status=acknowledged" className={styles.statCardLink}>
+                <div className={styles.statCard}>
+                  <Text size="sm" tone="textMuted">Completed / Closed</Text>
+                  <div className={styles.statNumber} data-testid="stat-acknowledged">{acknowledgedCount}</div>
+                  <Text size="xs" tone="textMuted">Officially fulfilled and archived</Text>
+                </div>
+              </Link>
             </div>
 
             <div className={styles.recentSection}>
@@ -149,47 +161,43 @@ export function RequesterDashboardScreen() {
               </div>
 
               {requests.length === 0 ? (
-                <div className={`${glass.panel} ${glass.tintBlue}`} style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
-                  <Stack gap={2} style={{ alignItems: 'center' }}>
-                    <Text size="md" weight="medium">No document requests found</Text>
-                    <Text size="sm" tone="textMuted">
-                      You have not submitted any document requests yet. Browse the catalogue or start a new request.
-                    </Text>
-                    <div style={{ marginTop: 'var(--space-2)' }}>
-                      <Link to="/tracks/docdesk/catalogue" style={{ textDecoration: 'none' }}>
-                        <Button variant="secondary" size="sm">
-                          Browse Catalogue
-                        </Button>
-                      </Link>
-                    </div>
-                  </Stack>
+                <div style={{ padding: 'var(--space-6)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+                  <Text tone="textMuted" size="sm">You have not submitted any document requests yet.</Text>
+                  <div style={{ marginTop: 'var(--space-3)' }}>
+                    <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
+                      <Button variant="primary" size="sm">
+                        New Request
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <div className={styles.list}>
-                  {requests.slice(0, 5).map((req) => (
+                  {requests.map((req) => (
                     <Link
                       key={req.request_id}
                       to={`/tracks/docdesk/requests/${req.request_id}`}
                       className={styles.listItem}
-                      data-testid={`request-row-${req.request_id}`}
                     >
                       <Stack gap={1}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                           <Text size="sm" weight="bold">
                             {req.doc_type_name ?? req.doc_type_id}
                           </Text>
-                          <Text size="xs" tone="textMuted">
-                            #{req.request_id}
-                          </Text>
+                          <StatusBadge status={req.status} />
+                          {req.tat && <TATBadge tat={req.tat} />}
                         </div>
-                        <Text size="xs" tone="textMuted">
-                          Requested: {formatDate(req.created_at)}
+                        <Text size="xs" tone="textMuted" style={{ maxWidth: '600px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          Reason: {req.reason}
                         </Text>
                       </Stack>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                        <TATBadge tat={req.tat} />
-                        <StatusBadge status={req.status} />
+                      <div style={{ textAlign: 'right' }}>
+                        <Text size="xs" tone="textMuted">
+                          {formatDate(req.created_at)}
+                        </Text>
+                        <Text size="xs" tone="primary" weight="medium" style={{ marginTop: 2 }}>
+                          View
+                        </Text>
                       </div>
                     </Link>
                   ))}

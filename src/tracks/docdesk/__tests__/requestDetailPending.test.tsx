@@ -53,7 +53,6 @@ describe('RequestDetailScreen — Pending State (Screen 3)', () => {
   })
 
   it('prompts confirmation and withdraws request on withdraw action', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(requestsApi.withdrawRequest).mockResolvedValue(undefined as any)
 
     renderWithProviders(
@@ -69,10 +68,12 @@ describe('RequestDetailScreen — Pending State (Screen 3)', () => {
     const withdrawBtn = await screen.findByTestId('withdraw-request-button')
     fireEvent.click(withdrawBtn)
 
-    expect(confirmSpy).toHaveBeenCalled()
+    // Confirm in ConfirmModal
+    const modalConfirmBtn = screen.getByRole('dialog').querySelector('button[type="button"].danger, button.danger') ?? screen.getAllByRole('button', { name: 'Withdraw' })[1]
+    fireEvent.click(modalConfirmBtn)
+
     await waitFor(() => {
       expect(requestsApi.withdrawRequest).toHaveBeenCalledWith('REQ-PEND-01')
     })
-    confirmSpy.mockRestore()
   })
 })

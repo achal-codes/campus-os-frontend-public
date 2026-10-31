@@ -7,7 +7,6 @@ import { DocDeskLayout } from '../components/DocDeskLayout'
 import { LifecycleStrip } from '../components/LifecycleStrip'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glassStyles from '../theme/glass.module.css'
 import type { DocRequest, DocType, RequestStatus } from '../types'
 import { formatDate, formatDateTime } from '../utils/time'
 import styles from './MyRequestsScreen.module.css'
@@ -128,7 +127,7 @@ export function MyRequestsScreen() {
   const isFiltered = Boolean(statusFilter || docTypeFilter)
   const latestRequest = items.length > 0 ? items[0] : null
 
-  // Stat card counts computed dynamically (§3.9)
+  // Stat card counts computed dynamically
   const pendingCount = items.filter((i) => i.status === 'pending').length
   const answeredCount = items.filter((i) => i.status === 'answered').length
   const ackedCount = items.filter((i) => i.status === 'acknowledged').length
@@ -136,7 +135,7 @@ export function MyRequestsScreen() {
   return (
     <DocDeskLayout activeItem="my-requests">
       <div className={styles.container} data-testid="docdesk-my-requests-screen">
-        {/* Header (§4.0 / Wireframe 1) */}
+        {/* Header */}
         <div className={styles.headerRow}>
           <div className={styles.headerText}>
             <h1 className={styles.title}>My requests</h1>
@@ -145,12 +144,12 @@ export function MyRequestsScreen() {
 
           <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
             <Button variant="primary" size="md" data-testid="new-request-button">
-              New request
+              New Request
             </Button>
           </Link>
         </div>
 
-        {/* Stat Cards (§3.9 / §4.0) */}
+        {/* Stat Cards */}
         <div className={styles.statCardsRow}>
           <button
             type="button"
@@ -186,7 +185,7 @@ export function MyRequestsScreen() {
           </button>
         </div>
 
-        {/* Latest Request Mini Progress Map (§3.8 / §4.0) */}
+        {/* Latest Request Mini Progress Map */}
         {latestRequest && !isFiltered && (
           <div className={styles.miniMapCard} data-testid="latest-request-mini-map">
             <div className={styles.miniMapHeader}>
@@ -201,7 +200,7 @@ export function MyRequestsScreen() {
           </div>
         )}
 
-        {/* Filter Panel (§3.6) */}
+        {/* Filter Panel */}
         <div className={styles.filterPanel}>
           <h2 className={styles.filterHeading}>Filter requests</h2>
           <div className={styles.filterControls}>
@@ -211,10 +210,16 @@ export function MyRequestsScreen() {
               </label>
               <select
                 id="filter-status"
-                className={glassStyles.glassSelect}
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 aria-label="Filter requests by status"
+                style={{
+                  padding: 'var(--space-2) var(--space-3)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                }}
               >
                 {STATUS_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -230,10 +235,16 @@ export function MyRequestsScreen() {
               </label>
               <select
                 id="filter-doctype"
-                className={glassStyles.glassSelect}
                 value={docTypeFilter}
                 onChange={(e) => setDocTypeFilter(e.target.value)}
                 aria-label="Filter requests by document type"
+                style={{
+                  padding: 'var(--space-2) var(--space-3)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                }}
               >
                 <option value="">All types</option>
                 {docTypes.map((dt) => (
@@ -258,7 +269,7 @@ export function MyRequestsScreen() {
                     onClick={() => setStatusFilter('')}
                     aria-label="Remove status filter"
                   >
-                    ×
+                    ✕
                   </button>
                 </span>
               )}
@@ -271,7 +282,7 @@ export function MyRequestsScreen() {
                     onClick={() => setDocTypeFilter('')}
                     aria-label="Remove document type filter"
                   >
-                    ×
+                    ✕
                   </button>
                 </span>
               )}
@@ -291,13 +302,13 @@ export function MyRequestsScreen() {
 
         {/* Loading / Empty / Content */}
         {loading ? (
-          <div className={glassStyles.glassPanel} style={{ padding: '32px', textAlign: 'center' }}>
+          <div style={{ padding: '32px', textAlign: 'center' }}>
             <Spinner label="Loading your requests..." />
           </div>
         ) : items.length === 0 ? (
-          <div className={glassStyles.glassPanel} style={{ padding: '32px', textAlign: 'center' }}>
+          <div style={{ padding: '32px', textAlign: 'center', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <Text as="h3" size="md" weight="medium">
-              {isFiltered ? 'No requests match these filters' : "No requests found. Click 'New request' to get started."}
+              {isFiltered ? 'No requests match these filters' : "No requests found. Click 'New Request' to get started."}
             </Text>
             <Text size="sm" tone="textMuted" style={{ marginTop: '8px' }}>
               {isFiltered
@@ -312,7 +323,7 @@ export function MyRequestsScreen() {
               ) : (
                 <Link to="/tracks/docdesk/new" style={{ textDecoration: 'none' }}>
                   <Button variant="primary" size="sm">
-                    New request
+                    New Request
                   </Button>
                 </Link>
               )}
@@ -321,8 +332,8 @@ export function MyRequestsScreen() {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className={`${glassStyles.glassTableContainer} ${styles.desktopTableContainer}`}>
-              <table className={glassStyles.glassTable} aria-label="My Requests Table">
+            <div className={styles.desktopTableContainer}>
+              <table aria-label="My Requests Table">
                 <thead>
                   <tr>
                     <th>Request ID</th>
@@ -348,7 +359,7 @@ export function MyRequestsScreen() {
                             title="Copy Request ID"
                             aria-label={`Copy request ID ${r.request_id}`}
                           >
-                            {copiedId === r.request_id ? '✓' : 'Copy'}
+                            {copiedId === r.request_id ? 'Copied' : 'Copy'}
                           </button>
                         </div>
                       </td>
@@ -381,7 +392,7 @@ export function MyRequestsScreen() {
               </table>
             </div>
 
-            {/* User-facing helper text (§3.5) */}
+            {/* User-facing helper text */}
             <div className={styles.helperText}>
               Select View to open a request's details.
             </div>
@@ -403,7 +414,7 @@ export function MyRequestsScreen() {
                           title="Copy Request ID"
                           aria-label={`Copy request ID ${r.request_id}`}
                         >
-                          {copiedId === r.request_id ? '✓' : 'Copy'}
+                          {copiedId === r.request_id ? 'Copied' : 'Copy'}
                         </button>
                       </div>
                       <Text size="sm" weight="bold" style={{ display: 'block', marginTop: 4 }}>
@@ -440,7 +451,7 @@ export function MyRequestsScreen() {
               ))}
             </div>
 
-            {/* Pagination Controls (§3.5) */}
+            {/* Pagination Controls */}
             <div className={styles.paginationRow}>
               <Text size="xs" tone="textMuted">
                 Showing {items.length} loaded records

@@ -75,7 +75,7 @@ describe('MyRequestsScreen', () => {
 
     expect(await screen.findByRole('heading', { name: 'My requests' })).toBeInTheDocument()
     expect(screen.getByText('Track the status of your document requests.')).toBeInTheDocument()
-    expect(screen.getByText('New request')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /New Request/i })).toBeInTheDocument()
 
     // Assert rows
     expect(await screen.findByText('REQ-001')).toBeInTheDocument()
@@ -98,7 +98,7 @@ describe('MyRequestsScreen', () => {
       { user: { id: 'student@campus.edu', name: 'John Student', email: 'student@campus.edu', role: 'student' } },
     )
 
-    expect(await screen.findByText("No requests found. Click 'New request' to get started.")).toBeInTheDocument()
+    expect(await screen.findByText("No requests found. Click 'New Request' to get started.")).toBeInTheDocument()
   })
 
   it('shows error state when request loading fails', async () => {

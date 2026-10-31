@@ -70,7 +70,6 @@ describe('RequestDetailScreen — Answered State (Screen 4)', () => {
   })
 
   it('acknowledges receipt and updates to terminal status', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(requestsApi.acknowledgeRequest).mockResolvedValue({
       ...mockAnsweredRequestWithDoc,
       status: 'acknowledged',
@@ -96,10 +95,12 @@ describe('RequestDetailScreen — Answered State (Screen 4)', () => {
     const ackBtn = await screen.findByTestId('acknowledge-request-button')
     fireEvent.click(ackBtn)
 
-    expect(confirmSpy).toHaveBeenCalled()
+    const modal = screen.getByRole('dialog')
+    const confirmBtn = modal.querySelector('button:last-child') as HTMLButtonElement
+    fireEvent.click(confirmBtn)
+
     await waitFor(() => {
       expect(requestsApi.acknowledgeRequest).toHaveBeenCalledWith('REQ-ANS-01')
     })
-    confirmSpy.mockRestore()
   })
 })

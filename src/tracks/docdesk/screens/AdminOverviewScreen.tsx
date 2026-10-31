@@ -6,7 +6,6 @@ import { listRequests } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glass from '../theme/glass.module.css'
 import type { DocRequest, DocType, RequestStatus } from '../types'
 import { formatDate } from '../utils/time'
 import styles from './AdminOverviewScreen.module.css'
@@ -145,7 +144,7 @@ export function AdminOverviewScreen() {
           </Text>
         </Stack>
 
-        <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-4)' }}>
+        <div className={styles.panel} style={{ padding: 'var(--space-4)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div style={{ minWidth: 200, flex: 1 }}>
               <SelectField
@@ -166,7 +165,7 @@ export function AdminOverviewScreen() {
             </div>
 
             <Button variant="secondary" onClick={handleRefresh}>
-              ↻ Refresh
+              Refresh
             </Button>
           </div>
         </div>
@@ -174,11 +173,11 @@ export function AdminOverviewScreen() {
         {error && <Alert tone="danger">{error}</Alert>}
 
         {loading ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={styles.panel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Spinner label="Loading institution-wide requests..." />
           </div>
         ) : items.length === 0 ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={styles.panel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Stack gap={2} style={{ alignItems: 'center' }}>
               <Text size="md" weight="medium">No records found</Text>
               <Text size="sm" tone="textMuted">No document requests match the selected filters.</Text>
@@ -186,7 +185,7 @@ export function AdminOverviewScreen() {
           </div>
         ) : (
           <>
-            <div className={`${glass.panel} ${glass.tintBlue}`}>
+            <div className={styles.panel}>
               <div className={styles.tableWrapper}>
                 <table className={styles.table} aria-label="Admin Audit Table">
                   <thead>
@@ -220,7 +219,7 @@ export function AdminOverviewScreen() {
                         <td><StatusBadge status={r.status} /></td>
                         <td>
                           <Link to={`/tracks/docdesk/admin/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
-                            <Button variant="secondary" size="sm">Inspect</Button>
+                            <Button variant="secondary" size="sm">View</Button>
                           </Link>
                         </td>
                       </tr>

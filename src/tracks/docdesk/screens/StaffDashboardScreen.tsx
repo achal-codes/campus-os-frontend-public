@@ -6,7 +6,6 @@ import { listRequests } from '../api/requests'
 import { DocDeskLayout } from '../components/DocDeskLayout'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glass from '../theme/glass.module.css'
 import type { DocRequest, DocType } from '../types'
 import { formatDate } from '../utils/time'
 import styles from './StaffDashboardScreen.module.css'
@@ -62,14 +61,14 @@ export function StaffDashboardScreen() {
         {error && <Alert tone="danger">{error}</Alert>}
 
         {loading ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div className={styles.panel} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Spinner label="Loading operational metrics..." />
           </div>
         ) : (
           <>
             {/* Operational Metrics */}
             <div className={styles.metricsGrid}>
-              <div className={`${glass.panel} ${glass.tintBlue} ${styles.metricCard}`}>
+              <div className={styles.metricCard}>
                 <Text size="xs" weight="bold" tone="textMuted">PENDING WORKLOAD</Text>
                 <Text size="2xl" weight="bold" data-testid="metric-pending-count">
                   {pendingRequests.length}
@@ -77,7 +76,7 @@ export function StaffDashboardScreen() {
                 <Text size="xs" tone="textMuted">Awaiting officer resolution</Text>
               </div>
 
-              <div className={`${glass.panel} ${glass.tintBlue} ${styles.metricCard}`}>
+              <div className={styles.metricCard}>
                 <Text size="xs" weight="bold" tone="textMuted">ANSWERED (ACTIVE)</Text>
                 <Text size="2xl" weight="bold" data-testid="metric-answered-count">
                   {answeredRequests.length}
@@ -85,7 +84,7 @@ export function StaffDashboardScreen() {
                 <Text size="xs" tone="textMuted">Awaiting requester acknowledgement</Text>
               </div>
 
-              <div className={`${glass.panel} ${glass.tintBlue} ${styles.metricCard}`}>
+              <div className={styles.metricCard}>
                 <Text size="xs" weight="bold" tone="textMuted">COMPLETED & ARCHIVED</Text>
                 <Text size="2xl" weight="bold" data-testid="metric-acknowledged-count">
                   {acknowledgedRequests.length}
@@ -93,7 +92,7 @@ export function StaffDashboardScreen() {
                 <Text size="xs" tone="textMuted">Fulfilled and acknowledged</Text>
               </div>
 
-              <div className={`${glass.panel} ${glass.tintBlue} ${styles.metricCard}`}>
+              <div className={styles.metricCard}>
                 <Text size="xs" weight="bold" tone="textMuted">DOCUMENT TYPES</Text>
                 <Text size="2xl" weight="bold" data-testid="metric-doctypes-count">
                   {activeTypes.length}
@@ -106,7 +105,7 @@ export function StaffDashboardScreen() {
             <div className={styles.actionsBar}>
               <Link to="/tracks/docdesk/staff" style={{ textDecoration: 'none' }}>
                 <Button variant="primary" size="md" data-testid="dash-goto-queue">
-                  View Full Request Queue →
+                  View Full Request Queue
                 </Button>
               </Link>
               <Link to="/tracks/docdesk/staff/bulk-tat" style={{ textDecoration: 'none' }}>
@@ -127,7 +126,7 @@ export function StaffDashboardScreen() {
             </div>
 
             {/* Urgent Pending Queue */}
-            <div className={`${glass.panel} ${glass.tintBlue}`}>
+            <div className={styles.panel}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
                 <Stack gap={1}>
                   <Text as="h2" size="md" weight="bold">
@@ -178,7 +177,7 @@ export function StaffDashboardScreen() {
                           <td><StatusBadge status={r.status} /></td>
                           <td>
                             <Link to={`/tracks/docdesk/staff/requests/${r.request_id}`} style={{ textDecoration: 'none' }}>
-                              <Button variant="secondary" size="sm">Process</Button>
+                              <Button variant="secondary" size="sm">View</Button>
                             </Link>
                           </td>
                         </tr>

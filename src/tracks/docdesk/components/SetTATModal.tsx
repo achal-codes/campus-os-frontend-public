@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Alert, Button, Card, Stack, Text, TextField } from '@/ui'
 import { setTAT } from '../api/requests'
+import { showToast } from './Toast'
 import type { DocRequest } from '../types'
 import { addDaysIST, todayIST } from '../utils/time'
 
@@ -16,7 +17,7 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // ESC key dismissal (BUG-06)
+  // ESC key dismissal
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && !submitting) {
@@ -47,6 +48,7 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
         expected_by: expectedBy,
         note: note.trim() || undefined,
       })
+      showToast('Turnaround time saved')
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set turnaround time')
@@ -63,9 +65,7 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -102,9 +102,9 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
                   style={{
                     padding: '2px 8px',
                     fontSize: '0.75rem',
-                    borderRadius: 6,
-                    border: '1px solid rgba(170, 59, 255, 0.3)',
-                    background: 'rgba(170, 59, 255, 0.08)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface-muted)',
                     cursor: 'pointer',
                     color: 'var(--color-text)',
                   }}
@@ -117,9 +117,9 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
                   style={{
                     padding: '2px 8px',
                     fontSize: '0.75rem',
-                    borderRadius: 6,
-                    border: '1px solid rgba(170, 59, 255, 0.3)',
-                    background: 'rgba(170, 59, 255, 0.08)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface-muted)',
                     cursor: 'pointer',
                     color: 'var(--color-text)',
                   }}
@@ -132,9 +132,9 @@ export function SetTATModal({ request, onClose, onSuccess }: SetTATModalProps) {
                   style={{
                     padding: '2px 8px',
                     fontSize: '0.75rem',
-                    borderRadius: 6,
-                    border: '1px solid rgba(170, 59, 255, 0.3)',
-                    background: 'rgba(170, 59, 255, 0.08)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface-muted)',
                     cursor: 'pointer',
                     color: 'var(--color-text)',
                   }}

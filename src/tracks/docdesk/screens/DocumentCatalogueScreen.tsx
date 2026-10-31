@@ -3,7 +3,6 @@ import { Link } from 'react-router'
 import { Alert, Button, Spinner, Stack, Text } from '@/ui'
 import { listDocTypes } from '../api/docTypes'
 import { DocDeskLayout } from '../components/DocDeskLayout'
-import glass from '../theme/glass.module.css'
 import type { DocType } from '../types'
 import styles from './DocumentCatalogueScreen.module.css'
 
@@ -56,11 +55,11 @@ export function DocumentCatalogueScreen() {
         )}
 
         {loading ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
             <Spinner label="Loading document catalogue..." />
           </div>
         ) : docTypes.length === 0 ? (
-          <div className={`${glass.panel} ${glass.tintBlue}`} style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+          <div style={{ textAlign: 'center', padding: 'var(--space-6)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <Stack gap={2} style={{ alignItems: 'center' }}>
               <Text size="md" weight="medium">No document types currently available</Text>
               <Text size="sm" tone="textMuted">
@@ -92,7 +91,7 @@ export function DocumentCatalogueScreen() {
                       style={{ textDecoration: 'none' }}
                     >
                       <Button variant="primary" size="sm" fullWidth>
-                        Request This Document →
+                        New Request
                       </Button>
                     </Link>
                   </div>

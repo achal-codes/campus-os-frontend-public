@@ -78,7 +78,6 @@ describe('StaffDetailScreen (Screen 6)', () => {
   })
 
   it('shows edit and withdraw answer buttons when answered, and withdraw answer reverts request', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(requestsApi.getRequest)
       .mockResolvedValueOnce(mockAnswered)
       .mockResolvedValueOnce(mockPending)
@@ -100,12 +99,15 @@ describe('StaffDetailScreen (Screen 6)', () => {
 
     // Trigger withdraw answer
     fireEvent.click(withdrawBtn)
-    expect(confirmSpy).toHaveBeenCalled()
+
+    // Confirm in ConfirmModal
+    const modal = screen.getByRole('dialog')
+    const confirmBtn = modal.querySelector('button:last-child') as HTMLButtonElement
+    fireEvent.click(confirmBtn)
 
     await waitFor(() => {
       expect(requestsApi.withdrawAnswer).toHaveBeenCalledWith('REQ-STF-01')
     })
-    confirmSpy.mockRestore()
   })
 
   it('hides all mutation controls when request is in terminal acknowledged status', async () => {

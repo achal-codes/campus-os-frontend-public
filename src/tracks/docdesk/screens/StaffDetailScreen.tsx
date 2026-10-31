@@ -8,13 +8,14 @@ import {
   withdrawAnswer,
 } from '../api/requests'
 import { AnswerComposerModal } from '../components/AnswerComposerModal'
+import { ConfirmModal } from '../components/ConfirmModal'
 import { DocDeskLayout } from '../components/DocDeskLayout'
-import { LifecycleStrip } from '../components/LifecycleStrip'
 import { RequestCommunicationPanel } from '../components/RequestCommunicationPanel'
+import { RequestStepper } from '../components/RequestStepper'
 import { SetTATModal } from '../components/SetTATModal'
 import { StatusBadge } from '../components/StatusBadge'
 import { TATBadge } from '../components/TATBadge'
-import glass from '../theme/glass.module.css'
+import { showToast } from '../components/Toast'
 import type { DocRequest } from '../types'
 import { formatFileSize } from '../utils/files'
 import { formatDate, formatDateTime } from '../utils/time'
@@ -31,6 +32,7 @@ export function StaffDetailScreen() {
   const [showAnswerModal, setShowAnswerModal] = useState(false)
   const [isEditingAnswer, setIsEditingAnswer] = useState(false)
   const [showTATModal, setShowTATModal] = useState(false)
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
   const [withdrawingAnswer, setWithdrawingAnswer] = useState(false)
   const [downloadingDoc, setDownloadingDoc] = useState(false)
   const [downloadingForm, setDownloadingForm] = useState(false)
@@ -91,18 +93,12 @@ export function StaffDetailScreen() {
     )
   }
 
-  async function handleWithdrawAnswer() {
-    const warningMsg = request!.filled_form
-      ? `Withdraw this answer? The request will revert to pending status. NOTE: The requester's uploaded filled form (${request!.filled_form.filename}) will also be permanently deleted by the server.`
-      : 'Withdraw this answer? The request will revert to pending status and all attached documents will be detached.'
-
-    if (!window.confirm(warningMsg)) {
-      return
-    }
-
+  async function handleConfirmWithdrawAnswer() {
     setWithdrawingAnswer(true)
     try {
       await withdrawAnswer(request!.request_id)
+      setShowWithdrawConfirm(false)
+      showToast('Answer withdrawn')
       await loadData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to withdraw answer')
@@ -207,7 +203,7 @@ export function StaffDetailScreen() {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={handleWithdrawAnswer}
+                    onClick={() => setShowWithdrawConfirm(true)}
                     loading={withdrawingAnswer}
                     data-testid="withdraw-answer-button"
                   >
@@ -219,15 +215,15 @@ export function StaffDetailScreen() {
           </div>
         </div>
 
-        {/* 3-Step Lifecycle Progress Strip */}
-        <LifecycleStrip status={request.status} />
+        {/* Request Stepper */}
+        <RequestStepper request={request} />
 
         {error && <Alert tone="danger">{error}</Alert>}
 
         {/* 3-Panel Grid */}
         <div className={styles.threePanelGrid}>
           {/* Panel A: Requester & Request Info */}
-          <div className={`${glass.panel} ${glass.tintBlue}`}>
+          <div className={styles.panel}>
             <Stack gap={4}>
               <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 REQUESTER & REQUEST
@@ -298,7 +294,7 @@ export function StaffDetailScreen() {
           </div>
 
           {/* Panel B: Turnaround Time (TAT) Management */}
-          <div className={`${glass.panel} ${glass.tintBlue}`}>
+          <div className={styles.panel}>
             <Stack gap={4}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -348,7 +344,7 @@ export function StaffDetailScreen() {
           </div>
 
           {/* Panel C: Official Answer & Resolution */}
-          <div className={`${glass.panel} ${glass.tintBlue} ${styles.fullWidthPanel}`}>
+          <div className={`${styles.panel} ${styles.fullWidthPanel}`}>
             <Stack gap={4}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
                 <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -370,7 +366,7 @@ export function StaffDetailScreen() {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={handleWithdrawAnswer}
+                      onClick={() => setShowWithdrawConfirm(true)}
                       loading={withdrawingAnswer}
                     >
                       Withdraw Answer
@@ -394,7 +390,7 @@ export function StaffDetailScreen() {
                           setShowAnswerModal(true)
                         }}
                       >
-                        Send Answer →
+                        Send Answer
                       </Button>
                     </div>
                   </Stack>
@@ -434,7 +430,7 @@ export function StaffDetailScreen() {
                         loading={downloadingDoc}
                         data-testid="staff-download-doc"
                       >
-                        Download Attached Document
+                        Download
                       </Button>
                     </div>
                   ) : (
@@ -448,7 +444,6 @@ export function StaffDetailScreen() {
                   {/* Acknowledgment Banner */}
                   {request.status === 'acknowledged' ? (
                     <div className={`${styles.ackBanner} ${styles.ackBannerSuccess}`}>
-                      <span>✓</span>
                       <span>
                         Requester acknowledged receipt and accepted the resolution
                         {request.acknowledged_at ? ` on ${formatDate(request.acknowledged_at)}` : ''}. Request lifecycle completed.
@@ -456,9 +451,8 @@ export function StaffDetailScreen() {
                     </div>
                   ) : (
                     <div className={`${styles.ackBanner} ${styles.ackBannerPending}`}>
-                      <span>⏳</span>
                       <span>
-                        Awaiting student/requester acknowledgment. Once verified, the lifecycle will close.
+                        Awaiting requester acknowledgment. Once verified, the lifecycle will close.
                       </span>
                     </div>
                   )}
@@ -493,6 +487,18 @@ export function StaffDetailScreen() {
             }}
           />
         )}
+
+        {/* Withdraw Answer Confirmation Modal */}
+        <ConfirmModal
+          isOpen={showWithdrawConfirm}
+          title="Withdraw answer"
+          message="The request returns to pending. The attached document and any uploaded filled form are removed."
+          confirmLabel="Withdraw"
+          confirmVariant="danger"
+          loading={withdrawingAnswer}
+          onConfirm={handleConfirmWithdrawAnswer}
+          onCancel={() => setShowWithdrawConfirm(false)}
+        />
       </div>
     </DocDeskLayout>
   )

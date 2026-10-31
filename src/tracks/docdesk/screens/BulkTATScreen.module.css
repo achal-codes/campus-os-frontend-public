@@ -47,6 +47,13 @@
   }
 }
 
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
 .panelHeader {
   display: flex;
   justify-content: space-between;
@@ -80,7 +87,7 @@
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
   border-bottom: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-muted);
 }
 
 .table td {
@@ -93,8 +100,12 @@
   border-bottom: none;
 }
 
+.table tr:hover td {
+  background: var(--color-surface-muted);
+}
+
 .selectedRow td {
-  background-color: var(--color-primary-subtle);
+  background-color: var(--color-surface-muted);
 }
 
 .previewList {
@@ -123,8 +134,8 @@
 }
 
 .rulesBox {
-  background: rgba(170, 59, 255, 0.05);
-  border: 1px dashed rgba(170, 59, 255, 0.25);
+  background: var(--color-surface-muted);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
   font-size: 0.8125rem;

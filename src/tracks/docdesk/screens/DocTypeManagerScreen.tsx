@@ -7,8 +7,9 @@ import {
   editDocType,
   listDocTypes,
 } from '../api/docTypes'
+import { ConfirmModal } from '../components/ConfirmModal'
 import { DocDeskLayout } from '../components/DocDeskLayout'
-import glass from '../theme/glass.module.css'
+import { showToast } from '../components/Toast'
 import type { DocType } from '../types'
 import styles from './DocTypeManagerScreen.module.css'
 
@@ -27,6 +28,10 @@ export function DocTypeManagerScreen() {
 
   // Tabs state: 'active' | 'archived'
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
+
+  // Confirm delete modal state
+  const [docTypeToDelete, setDocTypeToDelete] = useState<DocType | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   async function loadData() {
     setError(null)
@@ -104,15 +109,6 @@ export function DocTypeManagerScreen() {
   }, [isDirty, submitting])
 
   function resetForm() {
-    if (isDirty && typeof window.confirm === 'function') {
-      try {
-        if (!window.confirm('You have unsaved changes in the form. Discard?')) {
-          return
-        }
-      } catch {
-        // Ignore if confirm not implemented in environment
-      }
-    }
     setEditingDocType(null)
     setName('')
     setDescription('')
@@ -147,12 +143,14 @@ export function DocTypeManagerScreen() {
           status,
         })
         setSuccess(`Document type "${trimmedName}" updated successfully.`)
+        showToast('Document type saved')
       } else {
         await createDocType({
           name: trimmedName,
           description: description.trim() || undefined,
         })
         setSuccess(`Document type "${trimmedName}" created successfully.`)
+        showToast('Document type saved')
       }
       resetForm()
       await loadData()
@@ -195,21 +193,23 @@ export function DocTypeManagerScreen() {
     }
   }
 
-  async function handleDelete(dt: DocType) {
-    if (!window.confirm(`Are you sure you want to permanently delete "${dt.name}"? Archiving is recommended over deletion if historical requests exist.`)) {
-      return
-    }
-
+  async function handleConfirmDelete() {
+    if (!docTypeToDelete) return
+    setDeleting(true)
     setError(null)
     try {
-      await deleteDocType(dt.doc_type_id)
-      setSuccess(`"${dt.name}" deleted.`)
-      if (editingDocType?.doc_type_id === dt.doc_type_id) {
+      await deleteDocType(docTypeToDelete.doc_type_id)
+      setSuccess(`"${docTypeToDelete.name}" deleted.`)
+      showToast('Document type deleted')
+      if (editingDocType?.doc_type_id === docTypeToDelete.doc_type_id) {
         resetForm()
       }
+      setDocTypeToDelete(null)
       await loadData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete document type')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -245,7 +245,7 @@ export function DocTypeManagerScreen() {
 
         <div className={styles.twoColumnGrid}>
           {/* Panel A: ADD / EDIT DOCUMENT TYPE */}
-          <div className={`${glass.panel} ${glass.tintBlue}`}>
+          <div className={styles.panel}>
             <form onSubmit={handleSubmit} noValidate>
               <Stack gap={4}>
                 <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -302,14 +302,14 @@ export function DocTypeManagerScreen() {
           </div>
 
           {/* Panel B: EXISTING DOCUMENT TYPES */}
-          <div className={`${glass.panel} ${glass.tintBlue}`}>
+          <div className={styles.panel}>
             <Stack gap={3}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text as="h2" size="sm" weight="bold" tone="accent" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   EXISTING DOCUMENT TYPES
                 </Text>
                 <Button variant="secondary" size="sm" onClick={loadData}>
-                  ↻ Refresh
+                  Refresh
                 </Button>
               </div>
 
@@ -363,11 +363,12 @@ export function DocTypeManagerScreen() {
                             <span
                               style={{
                                 padding: '2px 8px',
-                                borderRadius: '9999px',
+                                borderRadius: 'var(--radius-full)',
                                 fontSize: '0.75rem',
                                 fontWeight: 600,
-                                background: dt.status === 'active' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                                background: dt.status === 'active' ? 'var(--color-surface-muted)' : 'var(--color-surface-muted)',
                                 color: dt.status === 'active' ? 'var(--color-success)' : 'var(--color-text-muted)',
+                                border: '1px solid var(--color-border)',
                               }}
                             >
                               {dt.status === 'active' ? 'Active' : 'Archived'}
@@ -387,7 +388,7 @@ export function DocTypeManagerScreen() {
                                   Activate
                                 </Button>
                               )}
-                              <Button size="sm" variant="danger" onClick={() => handleDelete(dt)}>
+                              <Button size="sm" variant="danger" onClick={() => setDocTypeToDelete(dt)}>
                                 Delete
                               </Button>
                             </div>
@@ -405,6 +406,18 @@ export function DocTypeManagerScreen() {
             </Stack>
           </div>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={Boolean(docTypeToDelete)}
+          title="Delete document type"
+          message={`Are you sure you want to permanently delete "${docTypeToDelete?.name}"? Archiving is recommended over deletion if historical requests exist.`}
+          confirmLabel="Delete"
+          confirmVariant="danger"
+          loading={deleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDocTypeToDelete(null)}
+        />
       </div>
     </DocDeskLayout>
   )

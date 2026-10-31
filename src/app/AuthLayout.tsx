@@ -13,7 +13,7 @@ export function AuthLayout() {
         {/* Left Column: Brand & Feature Highlights */}
         <section className={styles.brandPanel} aria-label="Campus OS Overview">
           <div className={styles.brandKicker}>
-            Campus OS • Unified Platform
+            Campus OS
           </div>
 
           <h1 className={styles.brandHeroTitle}>
@@ -26,7 +26,7 @@ export function AuthLayout() {
 
           <div className={styles.featureList}>
             <div className={styles.featureItem}>
-              <div className={styles.featureIcon}>⚡</div>
+              <div className={styles.featureIcon}>1</div>
               <div className={styles.featureText}>
                 <div className={styles.featureTitle}>Real-Time Request Lifecycle</div>
                 <div className={styles.featureDesc}>Track status instantly across pending, answered, and acknowledged milestones.</div>
@@ -34,7 +34,7 @@ export function AuthLayout() {
             </div>
 
             <div className={styles.featureItem}>
-              <div className={styles.featureIcon}>📋</div>
+              <div className={styles.featureIcon}>2</div>
               <div className={styles.featureText}>
                 <div className={styles.featureTitle}>Student Affairs Workflow</div>
                 <div className={styles.featureDesc}>Official responses with PDF/DOCX templates, bidirectional forms, and bulk turnaround time SLAs.</div>
@@ -42,7 +42,7 @@ export function AuthLayout() {
             </div>
 
             <div className={styles.featureItem}>
-              <div className={styles.featureIcon}>🔒</div>
+              <div className={styles.featureIcon}>3</div>
               <div className={styles.featureText}>
                 <div className={styles.featureTitle}>Role-Enforced Security</div>
                 <div className={styles.featureDesc}>Protected access for students, faculty, office staff, and system administrators.</div>
