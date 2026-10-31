@@ -71,6 +71,15 @@ export function LoginPage() {
     setParams(newParams, { replace: true })
   }
 
+  function fillDemo(email: string, otp: string, requireAdmin = false) {
+    setValues({ email, otp })
+    setErrors({})
+    setFormError(null)
+    if (requireAdmin !== isAdminMode) {
+      toggleAdminMode()
+    }
+  }
+
   async function handleAuthenticate() {
     const found = validateLogin(values)
     setErrors(found)
@@ -120,9 +129,30 @@ export function LoginPage() {
 
       {/* Centered Glass Card */}
       <div className={styles.card}>
-        {/* 1. Small brand wordmark */}
+        {/* 1. Brand & Trust Header */}
         <div className={styles.brandRow}>
-          <span className={styles.brandMark}>Campus OS</span>
+          <div className={styles.brandLogo}>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+              <path d="M6 6h10" />
+              <path d="M6 10h10" />
+            </svg>
+            <span className={styles.brandMark}>Campus OS</span>
+          </div>
+          <div className={styles.securityBadge}>
+            <span className={styles.securityDot} aria-hidden="true" />
+            <span>Verified Portal</span>
+          </div>
         </div>
 
         {/* 2. Single H1 and helper text */}
@@ -149,18 +179,36 @@ export function LoginPage() {
             <label htmlFor="login-email" className={styles.label}>
               Email
             </label>
-            <input
-              id="login-email"
-              type="email"
-              autoComplete="username"
-              className={styles.input}
-              value={values.email}
-              onChange={update('email')}
-              disabled={submitting}
-              aria-invalid={errors.email ? true : undefined}
-              aria-describedby={errors.email ? 'login-email-error' : undefined}
-              data-testid="login-email"
-            />
+            <div className={styles.inputWrapper}>
+              <svg
+                className={styles.inputIcon}
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              <input
+                id="login-email"
+                type="email"
+                autoComplete="username"
+                className={`${styles.input} ${styles.inputWithIcon}`}
+                value={values.email}
+                onChange={update('email')}
+                disabled={submitting}
+                aria-invalid={errors.email ? true : undefined}
+                aria-describedby={errors.email ? 'login-email-error' : undefined}
+                data-testid="login-email"
+                placeholder="name@institution.com"
+              />
+            </div>
             {errors.email && (
               <p id="login-email-error" className={styles.fieldError}>
                 {errors.email}
@@ -182,18 +230,34 @@ export function LoginPage() {
                 Password
               </label>
             </div>
-            <div className={styles.passwordWrapper}>
+            <div className={styles.inputWrapper}>
+              <svg
+                className={styles.inputIcon}
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
               <input
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
-                className={`${styles.input} ${styles.passwordInput}`}
+                className={`${styles.input} ${styles.inputWithIcon} ${styles.passwordInput}`}
                 value={values.otp}
                 onChange={update('otp')}
                 disabled={submitting}
                 aria-invalid={errors.otp ? true : undefined}
                 aria-describedby={errors.otp ? 'login-password-error' : undefined}
                 data-testid="login-password"
+                placeholder="6-digit OTP code"
               />
               <button
                 type="button"
@@ -233,6 +297,37 @@ export function LoginPage() {
               'Sign in'
             )}
           </button>
+
+          {/* Quick-Fill Demo Chips */}
+          <div className={styles.demoAccounts} aria-label="Demo accounts quick fill">
+            <span className={styles.demoLabel}>Demo shortcuts:</span>
+            <div className={styles.demoChips}>
+              <button
+                type="button"
+                className={styles.demoChip}
+                onClick={() => fillDemo('student@team24.com', '123456', false)}
+                title="Fill Student account"
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                className={styles.demoChip}
+                onClick={() => fillDemo('sa.officer@team24.com', '123456', false)}
+                title="Fill Student Affairs staff account"
+              >
+                Staff
+              </button>
+              <button
+                type="button"
+                className={styles.demoChip}
+                onClick={() => fillDemo('admin@team24.com', '204884', true)}
+                title="Fill Administrator account"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
 
           {/* Admin Sign-In Mode Toggle */}
           <div className={styles.adminToggleArea}>
