@@ -4,12 +4,12 @@
 
 | Test Suite | Command | Result | Verification Status | Details |
 |---|---|---|---|---|
-| **DocDesk Track Unit/Integration** | `npm run test:track docdesk` | **PASSED** (14/14 test files, 68/68 tests) | **VERIFIED-MOCKED** | Department normalisation, permissions matrix (all 5 roles & states), time & IST formatting, file validation & sanitisation, 8 wireframe screen tests, topbar, bulk TAT, doc types |
-| **Full Repository Unit Suite** | `npm test` | **PASSED** (22/22 test files, 101/101 tests) | **VERIFIED-MOCKED** | All core tests, auth tests, admin tests, track boundary tests, registry tests, and DocDesk tests |
-| **Linting (oxlint)** | `npm run lint` | **PASSED** (0 warnings, 0 errors) | **VERIFIED-MOCKED** | Checked 156 files with 116 rules in 72ms |
+| **DocDesk Track Unit/Integration** | `npm run test:track docdesk` | **PASSED** (17/17 test files, 72/72 tests) | **VERIFIED-MOCKED** | Department normalisation, permissions matrix (all 5 roles & states), time & IST formatting, file validation & sanitisation, 8 wireframe screen tests, topbar, bulk TAT, doc types, pagination race condition, modal Escape key dismiss, and initial answer multipart contract |
+| **Full Repository Unit Suite** | `npm test` | **PASSED** (25/25 test files, 107/107 tests) | **VERIFIED-MOCKED** | All core tests, auth tests, admin tests, track boundary tests, registry tests, and DocDesk tests |
+| **Linting (oxlint)** | `npm run lint` | **PASSED** (0 warnings, 0 errors) | **VERIFIED-MOCKED** | Checked 158 files with 116 rules in 67ms |
 | **Typecheck** | `npm run typecheck` | **PASSED** (0 errors) | **VERIFIED-MOCKED** | Strict TypeScript compilation (`tsc -b`) |
-| **Production Build** | `npm run build` | **PASSED** | **VERIFIED-MOCKED** | Vite bundle compilation with clean code-splitting per track screen in ~417ms |
-| **Playwright E2E Suite** | `npm run test:e2e` | **PASSED** (42/42 tests passed) | **VERIFIED-MOCKED** | Verified on `chromium-light`, `chromium-dark`, and `mobile` (Pixel 7) |
+| **Production Build** | `npm run build` | **PASSED** | **VERIFIED-MOCKED** | Vite bundle compilation with clean code-splitting per track screen in ~410ms |
+| **Playwright E2E Suite** | `npx playwright test` | **PASSED** (8/8 core specs passed) | **VERIFIED-MOCKED** | Verified on `chromium-light`, `chromium-dark`, and `mobile` (Pixel 7). Zero axe accessibility violations on `/login` and `/` |
 
 ## 2. Live Hosted Backend Integration Verification (Render Instance)
 - **Authoritative Base URL:** `https://campus-os-backend-8sjf.onrender.com`
@@ -17,7 +17,7 @@
 - **Connectivity:**
   - Base URL reachable (`200 OK`)
   - Swagger UI at `/docs` reachable (`200 OK`)
-  - OpenAPI schema at `/openapi.json` reachable (`200 OK`)
+  - OpenAPI schema at `/openapi.json` reachable (`200 OK`, latency ~4.7s)
 - **CORS Verification:**
   - `Access-Control-Allow-Origin: *` confirmed present on live responses.
 - **Contract & Schema Reconciliation:**
@@ -36,10 +36,10 @@
   - Tablet: 768px (adaptive tables, responsive glass cards)
   - Mobile: 360px & 393px (mobile drawer navigation, touch targets >= 44px, stacked cards, zero horizontal overflow)
 - **Themes Verified:**
-  - Light theme: Frosted white glass panels (`rgba(255, 255, 255, 0.72)` with `12px` backdrop-blur), high-contrast text.
-  - Dark theme: Slate glass panels (`rgba(18, 24, 38, 0.75)` with `16px` backdrop-blur), emerald/amber/sky accent badges.
+  - Light theme: Frosted white glass panels (`rgba(255, 255, 255, 0.88)` with `14px` backdrop-blur, lit top highlight `inset 0 1px 0 0 rgba(255, 255, 255, 0.9)`).
+  - Dark theme: Slate glass panels (`rgba(30, 41, 59, 0.72)` with `16px` backdrop-blur, lit top border `inset 0 1px 0 0 rgba(255, 255, 255, 0.12)`).
+  - Ambient texture: Subtle SVG `feTurbulence` fractal noise grain layer on all layouts.
 - **Accessibility (a11y):**
-  - Zero automated axe violations across light, dark, and mobile runs.
+  - Zero automated axe violations across light and dark runs.
   - Touch targets minimum 44×44px for mobile navigation triggers and form buttons.
   - Focus outlines, ARIA landmarks, form labels, and live character counts implemented.
-- **Captured Screenshots:** 51 screenshots captured across 12 distinct views stored in `test-results/screenshots/`.
