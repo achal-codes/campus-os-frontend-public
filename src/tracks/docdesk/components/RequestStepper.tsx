@@ -24,7 +24,7 @@ export function RequestStepper({ request }: RequestStepperProps) {
   const overdue = Boolean(hasTAT && request.status === 'pending' && isOverdue(request.tat!.expected_by))
 
   return (
-    <div className={styles.card} data-testid="request-stepper">
+    <div className={styles.card} data-testid="lifecycle-strip" data-component="request-stepper">
       <div className={styles.stepper}>
         <div className={styles.connector} aria-hidden="true">
           <div className={styles.connectorFill} style={{ width: fillPercent }} />

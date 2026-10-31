@@ -1,44 +1,45 @@
-# DocDesk Design Direction — Premium Glassmorphism & Top Navigation
+# DocDesk Design Direction — Single-Shell Wireframe Standards
 
-## 1. Aesthetic Vision: Premium Academic SaaS
-- **Visual Personality**: High-end university administrative system, blending frosted glassmorphism with crisp academic typography, refined purple accents, and fluid responsiveness.
-- **Surface Elevation & Glass System**:
-  - `backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);`
-  - Translucent surfaces: `rgba(255, 255, 255, 0.72)` in light theme, `rgba(26, 22, 37, 0.75)` in dark theme.
-  - Delicate border strokes: `1px solid rgba(255, 255, 255, 0.45)` (light) / `rgba(255, 255, 255, 0.1)` (dark).
-  - Ambient elevation shadows: `0 8px 32px 0 rgba(112, 60, 200, 0.08)` (light) / `0 8px 32px 0 rgba(0, 0, 0, 0.45)` (dark).
-  - High-performance fallback: `@supports not (backdrop-filter: blur(1px))` provides opaque, high-contrast theme surfaces.
+## 1. Aesthetic Mandate: Plain Wireframe Language
+- **Visual Personality**: High-contrast, typography-led enterprise university administrative system adhering strictly to organizer wireframe mandates.
+- **Surface Elevation & Color Tokens**:
+  - Solid surfaces: White (`#ffffff` / `var(--color-surface)`) in light mode; dark neutral (`var(--color-surface)`) in dark mode.
+  - Page background: Light neutral (`var(--color-bg)`).
+  - Single brand accent: Semantic `#4338ca` / `var(--color-primary)` (indigo/purple).
+  - Borders: Simple 1px neutral borders (`var(--color-border)`).
+  - Forbidden decorations: Zero glassmorphism, zero `backdrop-filter`, zero linear/radial gradients, zero emoji glyphs, zero decorative glow.
+- **Clarity Over Cleverness**:
+  Every screen answers within 3 seconds: Where am I? What is the state? What can I do next? What is the primary action?
 
-## 2. Global Top Toolbar (No Left Sidebar)
-- **Top Navigation Model**: Replaces the left sidebar with a sticky, translucent horizontal glass toolbar across all DocDesk screens.
-- **Left**: DocDesk brand glyph (`📄` / `◈ DocDesk`), title, and subtle CampusOS breadcrumb.
-- **Center**: Role-aware horizontal navigation pills:
-  - *Requester*: **My Requests**, **New Request**
-  - *Student Affairs*: **Dashboard**, **Requests** (Queue), **Document Types**
-  - *Admin*: **Overview**, **Request Audit**
-- **Right**:
-  - Role pill badge (e.g., `Requester`, `Student Affairs`, `Admin`)
-  - User name and institutional domain badge
-  - Theme toggle (Sun / Moon)
-  - Logout action
-- **Mobile (<768px)**: Compact bar with hamburger trigger, accessible glass drawer menu, touch targets >= 44px, outside click and Escape-key closure.
+## 2. Single-Shell Navigation Architecture
+- **Global CampusOS Header (`AppLayout`)**:
+  - The ONLY sticky header (`position: sticky; top: 0; z-index: 10`).
+  - Owns global branding ("Campus OS"), global track navigation, user identity, theme toggle, sign-out, and the single `<main>` landmark.
+- **DocDesk Workspace (`DocDeskLayout`)**:
+  - Two-column CSS Grid: `240px minmax(0, 1fr)`.
+  - Local Sidebar (`DocDeskSidebar`): `position: sticky; top: var(--shell-header-height, 57px); align-self: start; max-height: calc(100vh - var(--shell-header-height, 57px)); overflow-y: auto;`.
+  - Role-aware sidebar links (Exact labels):
+    - *Requester*: **My Requests**, **New Request**
+    - *Student Affairs*: **Dashboard**, **Requests**, **Document Types**
+    - *Admin*: **Request Audit**
+    - *Bulk TAT*: Not in sidebar; reachable exclusively via multi-selection from Requests queue.
+- **Mobile Navigation (<= 768px)**:
+  - Accessible modal drawer dialog (`role="dialog"`, `aria-modal="true"`) with backdrop (solid translucent neutral, NO blur).
+  - Non-sticky "Menu" button trigger (`aria-expanded`, `aria-controls="docdesk-sidebar-drawer"`).
+  - Accessible focus trap (Tab and Shift+Tab cycle within drawer).
+  - Reversible body scroll lock (`overflow: hidden` on open, fully restored on close/route-change/unmount).
+  - Escape key, backdrop click, close button, and route change dismissals with focus returning to trigger button.
 
-## 3. The Eight Complete Wireframe Screens
-1. **Screen 1 — My Requests**: Requester table/cards with live status/type glass filters and cursor pagination.
-2. **Screen 2 — New Document Request**: Centered glass card with dynamic active doc-type selector and 5-1000 char validation.
-3. **Screen 3 — Pending Request Details**: Request info, TAT indicator, glass edit modal, and withdraw confirmation dialog.
-4. **Screen 4 — Answered & Acknowledged Details**: Two-panel response & staff document download, verified `file` multipart filled-form upload/replace/remove, accessible Acknowledge modal.
-5. **Screen 5 — Student Affairs Request Queue**: Filter glass panel, pending-only multi-selection checkboxes, select-all on page, selected counter, navigation to Screen 8.
-6. **Screen 6 — Student Affairs Process Request**: 3-panel split view (Requester info, TAT picker with IST validation, Staff document & Answer composer with 1-2000 char validation).
-7. **Screen 7 — Document Type Management**: Two-panel layout with Add/Edit Document Type form and Existing Types table (active/archived tabs, activate, archive, delete).
-8. **Screen 8 — Bulk Turnaround Time**: Dedicated full-page screen with Left Pending Requests selection list and Right Apply Turnaround Time form (atomic all-or-nothing submission).
+## 3. Status Badges & Lifecycle
+- Exactly three request statuses:
+  - `Pending`: Amber-tinted pill (`#fef3c7` / text `#92400e`), solid amber dot.
+  - `Answered`: Indigo-tinted pill (`#e0e7ff` / text `#3730a3`), solid indigo dot.
+  - `Acknowledged`: Green-tinted pill (`#dcfce7` / text `#166534`), solid green dot.
+- "Withdrawn" is strictly never rendered as a status.
+- Color is never the sole information carrier: text label and shape/dot are always paired.
 
-## 4. Color & Contrast Accessibility
-- Primary accent: CampusOS brand purple (`#7c3aed` / `var(--color-primary)`).
-- Semantic statuses:
-  - `Pending`: Amber (`#d97706` / `#fef3c7`)
-  - `Answered`: Sky/Blue (`#0284c7` / `#e0f2fe`)
-  - `Acknowledged`: Emerald/Green (`#059669` / `#d1fae5`)
-  - `Error / Destructive`: Rose/Red (`#e11d48` / `#ffe4e6`)
-- Every status pairs text with distinct typography and icons; color is never the sole information carrier.
-- WCAG AA contrast ratio (> 4.5:1) guaranteed in both light and dark modes against glass panels.
+## 4. Accessibility (WCAG 2.2 AA)
+- Contrast ratio >= 4.5:1 for body text and >= 3:1 for UI borders and controls across both light and dark themes.
+- Touch target minimum 44x44px on all interactive controls.
+- Keyboard accessible without trap traps; Escape closes all dialogs and modals.
+- Tabular figures (`tabular-nums`) for all IDs, dates, and metric counters.

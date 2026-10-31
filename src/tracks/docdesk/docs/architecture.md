@@ -1,52 +1,69 @@
 # DocDesk Architecture & Design System
 
-## Overview
-DocDesk is structured as a self-contained, enterprise-grade track inside CampusOS, adhering to strict track boundaries:
-- Mounted at `/tracks/docdesk`
-- Auto-discovered via `defineTrack()` in `src/tracks/docdesk/index.ts`
-- Global sticky horizontal navigation via `DocDeskTopbar` (`data-testid="docdesk-nav"`) replacing all legacy sidebars
-- Premium frosted glass design system implemented in `theme/glass.module.css` with dark mode support and graceful `@supports not (backdrop-filter)` fallbacks
-- Role-based route guards (`RequesterGuard`, `StudentAffairsGuard`, `AdminGuard`)
-- Track-local adapter `api/http.ts` for authenticated multipart upload and binary blob downloads
-- All routes lazily loaded for minimal initial bundle overhead
+## Phase 1 Architecture Audit: Single-Shell Hierarchy
 
-## Complete Screen Catalog
+### 1. Current Hierarchy & Root Causes
+- **Route Nesting**:
+  CampusOS routes are defined in `src/app/routes.tsx`. Authenticated routes are wrapped by `RequireAuth` and render `AppLayout`. Inside `AppLayout`, `<Outlet />` renders active track routes under `/tracks/:id/*` defined by `defineTrack()`. DocDesk routes mount under `/tracks/docdesk/*`.
+- **Global Controls Ownership**:
+  `AppLayout` (`src/app/AppLayout.tsx`) owns global branding ("Campus OS"), global track navigation, user identity display (`user.name`), theme switcher (`<ThemeToggle />`), sign-out button, and the single `<main className={styles.main}>` landmark.
+- **Root Cause of Duplicate Topbar**:
+  `DocDeskLayout.tsx` previously mounted a redundant horizontal `<DocDeskTopbar />` which duplicated user identity, theme toggle, and sign out, and declared `position: sticky; top: 0; z-index: 50`. This competed with `AppLayout.module.css`'s `.header` (`position: sticky; top: 0; z-index: 10`), creating sticky collisions and visual redundancy.
+- **Root Cause of Nested `<main>`**:
+  `DocDeskLayout.tsx` (line 19) rendered `<main className={styles.mainContent} id="docdesk-main-content">` inside `AppLayout`'s `<main className={styles.main}><Outlet /></main>`, violating WCAG 2.2 AA and HTML semantics (only one `<main>` landmark per document).
+- **Width Constraint & Double-Padding Conflict**:
+  - `AppLayout.module.css`: `.main` had `max-width: 1120px; margin: 0 auto; padding: var(--space-7) var(--space-4);`.
+  - `DocDeskLayout.module.css`: `.mainContent` had `max-width: 1200px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);`.
+  - When placing a 240px sidebar into an 1120px-constrained container with double horizontal padding, the remaining content column was constrained to ~856px on wide viewports (1280px–1920px), severely cramping tabular data (e.g. Staff Queue, Bulk TAT, Audit).
+- **Global Header Height Definition**:
+  `AppLayout.module.css` `.header` has `padding: var(--space-3) var(--space-4)` with ~57px rendered height. Defining `--shell-header-height: 57px;` provides an explicit sticky top offset for the DocDesk local sidebar.
+
+### 2. Target Hierarchy & Single-Shell Architecture
+- **CampusOS Shell (`AppLayout`)**:
+  - Exclusively owns: Global branding, track navigation, user identity, theme toggle, sign-out, and the single `<main>` landmark.
+  - Minimal additive modifier: Applied when `location.pathname.startsWith('/tracks/docdesk')` (`styles.mainDocDesk`) to lift the 1120px `max-width` to `100%` and standardize padding, ensuring all non-DocDesk tracks remain completely unchanged at `max-width: 1120px`.
+- **DocDesk Workspace (`DocDeskLayout`)**:
+  - Zero topbars (`DocDeskTopbar` eliminated).
+  - CSS Grid workspace: `grid-template-columns: 240px minmax(0, 1fr)`. `minmax(0, 1fr)` ensures wide tables scroll horizontally without forcing page-level overflow.
+  - Local Sidebar (`DocDeskSidebar`): `position: sticky; top: var(--shell-header-height, 57px); align-self: start; max-height: calc(100vh - var(--shell-header-height, 57px)); overflow-y: auto;`.
+  - Non-main content wrapper: DocDesk content rendered inside `<section className={styles.workspaceSection}>` or `<div>`, eliminating the nested `<main>`.
+  - Mobile Drawer (<= 768px): Accessible drawer dialog (`role="dialog"`, `aria-modal="true"`) with backdrop (solid translucent neutral, no blur), focus trap, and reversible body scroll lock.
+
+---
+
+## Navigation & Role Mapping
+
+### Sidebar Primary Navigation (Exact Labels)
+- **Requester** (`student`, `faculty`, `office_staff` outside Student Affairs):
+  - `My Requests` &rarr; `/tracks/docdesk/my-requests`
+  - `New Request` &rarr; `/tracks/docdesk/new`
+- **Student Affairs** (`office_staff` in Student Affairs):
+  - `Dashboard` &rarr; `/tracks/docdesk/staff/dashboard`
+  - `Requests` &rarr; `/tracks/docdesk/staff`
+  - `Document Types` &rarr; `/tracks/docdesk/staff/doc-types`
+  *(Note: No "My Requests" or "Bulk TAT" in primary sidebar. Student Affairs staff can still access their own requests via direct URL, and Bulk TAT via queue multi-selection).*
+- **Admin**:
+  - `Request Audit` &rarr; `/tracks/docdesk/admin` (strictly no duplicate destinations).
+
+---
+
+## Screen Catalog
 
 ### Requester Flow
-1. **Screen 1 — My Requests (`/tracks/docdesk/my-requests`)**: Frosted glass filter panel (status pills, dynamic doc types, search), dual desktop table / mobile cards, cursor pagination, "View" action.
-2. **Screen 2 — New Document Request (`/tracks/docdesk/new`)**: Centered glass card, dynamic active document types with description callouts, reason input with 5–1000 char live counter, cancel/submit actions.
-3. **Screen 3 — Pending Request Details (`/tracks/docdesk/requests/:id`)**: Split glass layout, request info, TAT badge, edit request glass modal, withdraw action with confirmation.
-4. **Screen 4 — Answered & Acknowledged Request Details (`/tracks/docdesk/requests/:id`)**: Official response box, document download, filled-form round trip panel, acknowledge action with confirmation, chronological activity timeline.
-5. **Supporting — Requester Dashboard (`/tracks/docdesk`)**: Overview statistics (Pending, Answered, Completed), quick action buttons, recent requests glass list.
-6. **Supporting — Document Catalogue (`/tracks/docdesk/catalogue`)**: Grid of active institutional document types with "Request This Document" quick navigation.
+1. **Screen 1 — My Requests (`/tracks/docdesk/my-requests`)**: Status tabs, document type filter, search loaded requests, responsive table / cards, cursor pagination, "View" action.
+2. **Screen 2 — New Document Request (`/tracks/docdesk/new`)**: Solid card, active document types only, 5–1000 char live counter, cancel/submit actions.
+3. **Screen 3 — Pending Request Details (`/tracks/docdesk/requests/:id`)**: Details card, RequestStepper, TAT badge, in-app Edit Request modal, withdraw action with ConfirmModal.
+4. **Screen 4 — Answered & Acknowledged Request Details (`/tracks/docdesk/requests/:id`)**: Official answer card, document download, FilledFormPanel round trip, acknowledge action with ConfirmModal, RequestStepper.
+5. **Supporting — Requester Dashboard (`/tracks/docdesk`)**: Overview statistics, quick action links, recent requests list.
+6. **Supporting — Document Catalogue (`/tracks/docdesk/catalogue`)**: Active institutional document types grid with quick request links.
 
 ### Student Affairs Flow
-7. **Screen 5 — Student Affairs Request Queue (`/tracks/docdesk/staff`)**: Glass filter panel (status pills, doc type, All/Mine scope, search), multi-select checkboxes for pending rows, "Set Bulk TAT" button with badge, desktop table & mobile cards.
-8. **Screen 6 — Student Affairs Process Request (`/tracks/docdesk/staff/requests/:id`)**: 3-panel layout (Panel A: Requester info & filled form download; Panel B: Turnaround Time SLA target; Panel C: Answer & resolution composer / document upload, edit/withdraw answer, requester acknowledgment tracking), activity timeline.
-9. **Screen 7 — Document Type Management (`/tracks/docdesk/staff/doc-types`)**: Two-column layout (Left: Add/Edit Type form with 3–80 char validation and active toggle; Right: Active & Archived types glass tables with edit, archive, restore, delete actions).
-10. **Screen 8 — Bulk Turnaround Time (`/tracks/docdesk/staff/bulk-tat`)**: Dedicated screen under `StudentAffairsGuard`. Two-column layout (Left: Pending requests selection table with select-all; Right: Apply TAT form with `expected_by >= today IST`, optional note, affected preview list, atomic all-or-nothing batch update).
-11. **Supporting — Student Affairs Operations Hub (`/tracks/docdesk/staff/dashboard`)**: Real-time KPI metrics (Pending Workload, Answered Active, Completed, Document Types), immediate action items table.
+7. **Screen 5 — Student Affairs Request Queue (`/tracks/docdesk/staff`)**: Status filters, doc type filter, All/Mine scope, search loaded requests, pending-only row checkboxes, floating bottom bulk action bar ("Set TAT for Selected").
+8. **Screen 6 — Student Affairs Process Request (`/tracks/docdesk/staff/requests/:id`)**: Requester profile, TAT SLA targets (quick date buttons), Answer composer with file attachment, edit/withdraw answer with ConfirmModal.
+9. **Screen 7 — Document Type Management (`/tracks/docdesk/staff/doc-types`)**: Add/Edit type form (3–80 char validation), Active & Archived tabs, archive/restore toggles, permanent delete with ConfirmModal.
+10. **Screen 8 — Bulk Turnaround Time (`/tracks/docdesk/staff/bulk-tat`)**: Reachable only via queue row selection. Atomic all-or-nothing batch update (1–100 IDs), date picker, note input, empty state with back button when visited directly with no selection.
+11. **Supporting — Student Affairs Operations Hub (`/tracks/docdesk/staff/dashboard`)**: KPI metrics (Pending Workload, Answered Active, Completed, Document Types), immediate action items table.
 
 ### Admin Flow (Strict Read-Only)
-12. **Supporting — Admin Overview (`/tracks/docdesk/admin`)**: Institution-wide audit inspection of all requests, filterable by status and doc type, strictly zero mutation controls.
-13. **Supporting — Admin Detail (`/tracks/docdesk/admin/requests/:id`)**: Complete read-only audit inspection of requester profile, submission reason, official answer, attached documents, filled form, and chronological timeline. Explicit "ADMIN AUDIT MODE (MUTATION DISABLED)" badge.
-
-## File Organization
-```
-src/tracks/docdesk/
-├── api/            # Typed endpoints and HTTP transport adapter (VERIFIED-LIVE)
-├── components/     # Topbar, Layout, Guards, Badges, Modals, CommunicationPanel
-├── docs/           # api-matrix.md, api-quirks.md, architecture.md, testing-report.md
-├── hooks/          # useProfile, useCursorPagination
-├── permissions/    # Central typed permission engine (can())
-├── routes.tsx      # Route definitions with track-local guards
-├── screens/        # All 8 Wireframe Screens + 5 Supporting Screens
-├── theme/          # glass.module.css (frosted glass tokens & utility classes)
-├── types/          # Strict TypeScript interfaces
-└── utils/          # Department normalisation, time (IST), errors, file validation
-```
-
-## Security & Boundary Architecture
-- Strict track boundaries verified by `boundaries.test.ts`: docdesk files import only from `@/ui`, `@/theme`, `@/core`, and track-local files.
-- Admin permissions strictly read-only: Admin cannot create, edit, answer, upload, or delete any requests or document types.
-- Student Affairs operations strictly isolated to users with `role: "office_staff"` and normalized department `"Student Affairs"`.
+12. **Supporting — Admin Overview (`/tracks/docdesk/admin`)**: Institution-wide audit view of all requests, filterable by status and doc type, strictly zero mutation controls.
+13. **Supporting — Admin Detail (`/tracks/docdesk/admin/requests/:id`)**: Read-only audit inspection of requester profile, submission reason, official answer, attached documents, filled form, RequestStepper.

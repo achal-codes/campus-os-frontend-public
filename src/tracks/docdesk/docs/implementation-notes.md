@@ -14,68 +14,44 @@
 
 ---
 
-## 2. Five-Minute Hackathon Demo Script (Team 24)
-
-### Prerequisites Setup (via Admin Console at `/admin`)
-1. Admin logs in with `admin@team24.com` using the organiser-supplied OTP.
-2. Admin creates sample users in domain `team24.com`:
-   - Student: e.g. `asha@team24.com` (`dept: CSE`, `usn: 1CF24CS024`)
-   - Office Staff: e.g. `ravi@team24.com` (`dept: Student Affairs`, `designation: Section Officer`)
-   - Faculty: e.g. `meera@team24.com` (`designation: Professor`)
-
-### Walkthrough
-- **Minute 1: Overview & Requester Dashboard**
-  - Sign in as Student (`asha@team24.com`).
-  - Open DocDesk from the top navigation bar.
-  - Review the Requester Dashboard showing loaded request counts and available actions.
-- **Minute 2: Document Catalogue & Request Creation**
-  - Click on "Catalogue" or "Request Document".
-  - Pick an active document type (e.g. *Bonafide Certificate*).
-  - Fill in the required purpose (e.g. "Required for external scholarship application").
-  - Submit the request. Highlight the assigned `DRQ-...` ID and initial `pending` status.
-- **Minute 3: Student Affairs Operational Desk**
-  - Switch session to Student Affairs staff (`ravi@team24.com`, `dept: Student Affairs`).
-  - Access the Staff Queue at `/tracks/docdesk/staff`.
-  - Filter queue by `pending`.
-  - Select the request, click "Set TAT", and specify tomorrow's date in IST with an operational note.
-  - Open "Submit Official Answer": provide official instructions and attach an official document (PDF/DOCX <= 10 MB).
-- **Minute 4: Requester Verification, File Download, & Round-Trip**
-  - Return to student view (`asha@team24.com`).
-  - Notice the status transition to `answered`.
-  - Download the official document via authenticated streaming.
-  - If a filled form is required, demonstrate the form round-trip by uploading the completed form (`filled_form`).
-  - Click "✓ Acknowledge & Close" to confirm receipt. Status transitions to `acknowledged`.
-- **Minute 5: Institutional Audit & Admin Read-Only Guarantee**
-  - Sign in as Team 24 Admin (`admin@team24.com`).
-  - Navigate to `/tracks/docdesk/admin`.
-  - Open the audit record: verify complete metadata, timestamps, reason, staff response, and document download options.
-  - Highlight the complete absence of mutation buttons (zero create, edit, withdraw, answer, or acknowledgement controls), enforcing strict audit-only access.
-  - Show the honest communication timeline confirming official request-and-response lifecycle milestones.
+## 2. Single-Shell Architecture & Refinement
+1. **Single-Shell Hierarchy**:
+   - `AppLayout` exclusively owns the application header (`position: sticky; top: 0; z-index: 10`), global track navigation, user identity (`user.name`), theme switcher (`ThemeToggle`), sign-out button, and the single `<main>` landmark.
+   - `DocDeskLayout` owns the workspace layout and local sidebar (`DocDeskSidebar`).
+   - The duplicate `DocDeskTopbar` has been completely deleted.
+2. **Nested `<main>` Elimination**:
+   - `DocDeskLayout` replaced `<main id="docdesk-main-content">` with `<section className={styles.workspaceSection} id="docdesk-workspace-content">`. Exactly one `<main>` landmark exists in the document.
+3. **Width Constraint & Additive Modifier**:
+   - `AppLayout.module.css` previously restricted `.main` to `max-width: 1120px; margin: 0 auto; padding: var(--space-7) var(--space-4);`. Inside this container, a 240px sidebar reduced tabular views to ~856px on 1280px–1920px viewports.
+   - Resolution: Introduced an additive modifier in `src/app/AppLayout.tsx` (`styles.mainDocDesk`) applied strictly when `location.pathname.startsWith('/tracks/docdesk')`. It lifts `max-width` to `100%` and adjusts padding, allowing DocDesk's CSS Grid (`240px minmax(0, 1fr)`) to utilize the full available desktop width without horizontal overflow.
+   - Non-DocDesk tracks remain completely untouched at `max-width: 1120px` (verified by unit test in `singleShell.test.tsx`).
+4. **Mobile Navigation & Scroll Lock**:
+   - Mobile viewport (<= 768px): Desktop sidebar is hidden; workspace renders a non-sticky "Menu" button (`data-testid="docdesk-menu-toggle"`) with `aria-expanded` and `aria-controls`.
+   - Drawer Dialog: Has `role="dialog"`, `aria-modal="true"`, accessible focus trap cycling Tab / Shift+Tab only inside drawer elements.
+   - Reversible scroll lock: Saves `document.body.style.overflow`, sets `document.body.style.overflow = 'hidden'`, and fully restores original overflow on close, route change, and unmount.
+5. **Exact Role Navigation Links**:
+   - **Requester**: `My Requests`, `New Request`.
+   - **Student Affairs**: `Dashboard`, `Requests`, `Document Types`. (No "My Requests", no "Bulk TAT" in primary sidebar).
+   - **Admin**: `Request Audit` (no duplicate destinations).
+   - Bulk TAT is reached exclusively through queue selection passing real request IDs. Direct visits without selection render a clear empty state with a return link.
+6. **Plain Wireframe Standards**:
+   - Solid white cards, light neutral background, `#4338ca` accent.
+   - Zero gradients, zero `backdrop-filter`, zero emoji glyphs.
+   - Three statuses only: `Pending`, `Answered`, `Acknowledged`. Never "Withdrawn".
 
 ---
 
 ## 3. Guarding Strategy
-- Because the shared `RequireRole` only checks a single role, DocDesk provides track-local route wrappers in `components/Guards.tsx`:
-  - `RequesterGuard`: Allows `student`, `faculty`, and `office_staff`. Redirects `admin` directly to `/tracks/docdesk/admin`.
-  - `StudentAffairsGuard`: Waits for profile hydration (`/users/me`), verifies `role === 'office_staff'` and `isStudentAffairs(dept)`.
-  - `AdminGuard`: Checks `role === 'admin'`. Never blocks on profile hydration.
-
+- `RequesterGuard`: Allows `student`, `faculty`, and `office_staff`. Redirects `admin` directly to `/tracks/docdesk/admin`.
+- `StudentAffairsGuard`: Waits for profile hydration (`/users/me`), verifies `role === 'office_staff'` and `isStudentAffairs(dept)`.
+- `AdminGuard`: Checks `role === 'admin'`. Never blocks on profile hydration.
 
 ---
 
-## 4. UI/UX Transformation & Phase Baseline Audit (Phase 1 Gate)
-- **Baseline Test Suite Status**:
-  - `npm run lint`: 0 warnings, 0 errors across 141 files.
-  - `npm run typecheck`: clean (`tsc -b`).
-  - `npm run test:track docdesk`: 5 test files, 33/33 tests passed.
-  - `npm test`: 13 test files, 66/66 tests passed.
-  - `npm run build`: built in 343ms.
-  - `npm run test:e2e`: 33/33 Playwright tests passed.
-- **Protected Paths Inspected**:
-  - `boundaries.test.ts` enforces that tracks only import from `@/ui`, `@/theme`, `@/core`, npm packages, and their own track folder (`src/tracks/docdesk/`).
-  - All shared core modules (`src/app/`, `src/core/`, `src/ui/`, `src/theme/`, `src/features/`) are strictly protected and untouched.
-- **Design Upgrade Objectives**:
-  - Global horizontal top glass toolbar (`DocDeskTopbar`) replacing sidebar navigation.
-  - Premium glassmorphism design tokens (`glass.module.css`) with WCAG AA compliance and `@supports not (backdrop-filter)` fallback.
-  - Implementation of all 8 complete wireframe screens, including dedicated Screen 8 for Bulk TAT (`BulkTATScreen.tsx`).
-  - Preservation and glass-restyling of supporting dashboards (Requester, Student Affairs, and Admin).
+## 4. Test Suite Verification
+- `npm run lint`: 0 warnings, 0 errors.
+- `npm run typecheck`: clean (`tsc -b`).
+- `npm run test:track docdesk`: 17 test files, 81/81 tests passed.
+- `npm test`: 25 test files, 116/116 tests passed.
+- `npm run build`: built in 522ms (`tsc -b && vite build`).
+- `npm run test:e2e`: 42/42 Playwright tests passed across `chromium-light`, `chromium-dark`, and `mobile`.

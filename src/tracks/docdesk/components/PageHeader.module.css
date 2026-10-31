@@ -1,0 +1,108 @@
+/* PageHeader component styling
+ * Plain wireframe language: clean typography, white background, no glass
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.breadcrumbNav {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumbList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.breadcrumbItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.breadcrumbLink {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.breadcrumbLink:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
+
+:root[data-theme='dark'] .breadcrumbLink:hover {
+  color: #818cf8;
+}
+
+.breadcrumbSeparator {
+  color: var(--color-border);
+  user-select: none;
+}
+
+.breadcrumbCurrent {
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.titleArea {
+  flex: 1;
+  min-width: 240px;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--space-1) 0;
+  letter-spacing: -0.02em;
+  outline: none;
+}
+
+.helperText {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.actionsArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .headerRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actionsArea {
+    width: 100%;
+  }
+
+  .actionsArea > * {
+    width: 100%;
+  }
+}

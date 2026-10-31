@@ -3,19 +3,37 @@ import styles from './StatusBadge.module.css'
 
 interface StatusBadgeProps {
   status: RequestStatus
+  className?: string
 }
 
-const LABELS: Record<RequestStatus, string> = {
-  pending: 'Pending',
-  answered: 'Answered',
-  acknowledged: 'Acknowledged',
-}
+export function StatusBadge({ status, className }: StatusBadgeProps) {
+  let label = 'Pending'
+  let styleClass = styles.pending
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+  switch (status) {
+    case 'answered':
+      label = 'Answered'
+      styleClass = styles.answered
+      break
+    case 'acknowledged':
+      label = 'Acknowledged'
+      styleClass = styles.acknowledged
+      break
+    case 'pending':
+    default:
+      label = 'Pending'
+      styleClass = styles.pending
+      break
+  }
+
   return (
-    <span className={`${styles.badge} ${styles[status]}`} data-testid={`status-badge-${status}`}>
+    <span
+      className={`${styles.badge} ${styleClass} ${className ?? ''}`}
+      data-testid={`status-badge-${status}`}
+      data-status={status}
+    >
       <span className={styles.dot} aria-hidden="true" />
-      {LABELS[status] ?? status}
+      <span>{label}</span>
     </span>
   )
 }

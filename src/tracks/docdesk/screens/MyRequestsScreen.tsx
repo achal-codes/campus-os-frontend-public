@@ -269,7 +269,7 @@ export function MyRequestsScreen() {
                     onClick={() => setStatusFilter('')}
                     aria-label="Remove status filter"
                   >
-                    ✕
+                    &times;
                   </button>
                 </span>
               )}
@@ -282,7 +282,7 @@ export function MyRequestsScreen() {
                     onClick={() => setDocTypeFilter('')}
                     aria-label="Remove document type filter"
                   >
-                    ✕
+                    &times;
                   </button>
                 </span>
               )}

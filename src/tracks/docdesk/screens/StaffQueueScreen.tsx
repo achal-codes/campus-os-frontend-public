@@ -285,7 +285,7 @@ export function StaffQueueScreen() {
                   className={styles.filterChip}
                   onClick={() => setStatusFilter('')}
                 >
-                  Status: {STATUS_OPTIONS.find((s) => s.value === statusFilter)?.label} ✕
+                  Status: {STATUS_OPTIONS.find((s) => s.value === statusFilter)?.label} &times;
                 </button>
               )}
               {docTypeFilter && (
@@ -294,7 +294,7 @@ export function StaffQueueScreen() {
                   className={styles.filterChip}
                   onClick={() => setDocTypeFilter('')}
                 >
-                  Type: {docTypes.find((d) => d.doc_type_id === docTypeFilter)?.name ?? docTypeFilter} ✕
+                  Type: {docTypes.find((d) => d.doc_type_id === docTypeFilter)?.name ?? docTypeFilter} &times;
                 </button>
               )}
               {mineOnly && (
@@ -303,7 +303,7 @@ export function StaffQueueScreen() {
                   className={styles.filterChip}
                   onClick={() => setMineOnly(false)}
                 >
-                  Scope: Mine ✕
+                  Scope: Mine &times;
                 </button>
               )}
               {searchQuery && (
@@ -312,7 +312,7 @@ export function StaffQueueScreen() {
                   className={styles.filterChip}
                   onClick={() => setSearchQuery('')}
                 >
-                  Search: &ldquo;{searchQuery}&rdquo; ✕
+                  Search: &ldquo;{searchQuery}&rdquo; &times;
                 </button>
               )}
             </div>
