@@ -187,3 +187,4 @@ export function DocDeskSidebar({ mobileOpen = false, onCloseMobile }: DocDeskSid
     </>
   )
 }
+

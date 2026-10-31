@@ -2,13 +2,13 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import * as authService from './authService'
 import { AuthContext } from './context'
 
-export function AuthProvider({ children, initialUser }: { children: ReactNode, initialUser?: authService.User | null }) {
+export function AuthProvider({ children, initialUser }: { children: ReactNode; initialUser?: authService.User | null }) {
   const [user, setUser] = useState<authService.User | null>(() =>
     initialUser !== undefined ? initialUser : authService.getCurrentUser(),
   )
 
-  const signIn = useCallback(async (email: string, otp: string) => {
-    const next = await authService.signIn(email, otp)
+  const signIn = useCallback(async (email: string, otp: string, options?: authService.SignInOptions) => {
+    const next = await authService.signIn(email, otp, options)
     setUser(next)
     return next
   }, [])

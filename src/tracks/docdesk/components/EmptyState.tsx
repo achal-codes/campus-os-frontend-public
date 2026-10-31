@@ -18,3 +18,4 @@ export function EmptyState({ title, description, action, className, testId }: Em
     </div>
   )
 }
+

@@ -38,11 +38,12 @@ export async function apiUpload<T>(
   const data = res.status === 204 ? null : await res.json().catch(() => null)
   if (!res.ok) {
     const e = data?.error
+    const requestId = data?.request_id ?? undefined
     if (res.status === 401) {
       saveSession(null)
       window.location.assign('/login')
     }
-    throw new ApiError(res.status, e?.code ?? 'UNKNOWN', e?.message ?? 'Upload failed. Try again.', e?.details)
+    throw new ApiError(res.status, e?.code ?? 'UNKNOWN', e?.message ?? 'Upload failed. Try again.', e?.details, requestId)
   }
   return data as T
 }
@@ -78,11 +79,12 @@ export async function apiDownload(
   if (!res.ok) {
     const data = await res.json().catch(() => null)
     const e = data?.error
+    const requestId = data?.request_id ?? undefined
     if (res.status === 401) {
       saveSession(null)
       window.location.assign('/login')
     }
-    throw new ApiError(res.status, e?.code ?? 'UNKNOWN', e?.message ?? 'Download failed.', e?.details)
+    throw new ApiError(res.status, e?.code ?? 'UNKNOWN', e?.message ?? 'Download failed.', e?.details, requestId)
   }
 
   const blob = await res.blob()

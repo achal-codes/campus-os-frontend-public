@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useAuth } from '@/core/auth'
-import { ApiError } from '@/core/api'
 import { Alert, Button, Stack, Text, TextField } from '@/ui'
+import { mapAuthError, type MappedAuthError } from './mapAuthError'
 import { safeNext } from './safeNext'
 import { hasErrors, validateLogin, type FieldErrors, type LoginValues } from './validation'
 import styles from './LoginPage.module.css'
@@ -10,12 +10,15 @@ import styles from './LoginPage.module.css'
 export function LoginPage() {
   const { user, signIn } = useAuth()
   const navigate = useNavigate()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const next = safeNext(params.get('next'))
+
+  const initialIsAdmin = params.get('mode') === 'admin' || params.get('admin') === 'true'
+  const [isAdminMode, setIsAdminMode] = useState(initialIsAdmin)
 
   const [values, setValues] = useState<LoginValues>({ email: '', otp: '' })
   const [errors, setErrors] = useState<FieldErrors<LoginValues>>({})
-  const [formError, setFormError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<MappedAuthError | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [isWaking, setIsWaking] = useState(false)
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0)
@@ -52,10 +55,22 @@ export function LoginPage() {
   const update = (field: keyof LoginValues) => (event: ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [field]: event.target.value }))
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (rateLimitCountdown > 0) return
+  function toggleAdminMode() {
+    const nextMode = !isAdminMode
+    setIsAdminMode(nextMode)
+    setFormError(null)
+    setErrors({})
+    const newParams = new URLSearchParams(params)
+    if (nextMode) {
+      newParams.set('mode', 'admin')
+    } else {
+      newParams.delete('mode')
+      newParams.delete('admin')
+    }
+    setParams(newParams, { replace: true })
+  }
 
+  async function handleAuthenticate() {
     const found = validateLogin(values)
     setErrors(found)
     setFormError(null)
@@ -64,13 +79,13 @@ export function LoginPage() {
     setSubmitting(true)
     setIsWaking(false)
 
-    // Free tier Render server wake warning after 4.5 seconds
+    // Render cold start notification after 4 seconds
     wakingTimerRef.current = setTimeout(() => {
       setIsWaking(true)
-    }, 4500)
+    }, 4000)
 
     try {
-      await signIn(values.email, values.otp)
+      await signIn(values.email, values.otp, { isAdmin: isAdminMode })
       if (wakingTimerRef.current) clearTimeout(wakingTimerRef.current)
       navigate(next, { replace: true })
     } catch (error) {
@@ -78,23 +93,19 @@ export function LoginPage() {
       setIsWaking(false)
       setSubmitting(false)
 
-      if (error instanceof ApiError) {
-        if (error.code === 'INVALID_CREDENTIALS') {
-          setFormError(error.message || 'Invalid email_id or OTP')
-        } else if (error.code === 'UNKNOWN_INSTITUTION') {
-          setFormError(error.message || 'Unknown institution domain. Please sign in with your campus email.')
-        } else if (error.code === 'RATE_LIMITED') {
-          setRateLimitCountdown(30)
-          setFormError('Too many login attempts. Please wait 30 seconds before trying again.')
-        } else if (error.code === 'USE_ADMIN_LOGIN') {
-          setFormError('Please use the admin login portal for this administrative account.')
-        } else {
-          setFormError(error.message || 'Authentication failed. Please try again.')
-        }
-      } else {
-        setFormError(error instanceof Error ? error.message : 'Something went wrong. Try again.')
+      const mapped = mapAuthError(error)
+      setFormError(mapped)
+
+      if (mapped.isRateLimited) {
+        setRateLimitCountdown(30)
       }
     }
+  }
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (rateLimitCountdown > 0 || submitting) return
+    await handleAuthenticate()
   }
 
   return (
@@ -102,21 +113,49 @@ export function LoginPage() {
       <Stack gap={2}>
         <div className={styles.badgeRow}>
           <span className={styles.badge}>Campus OS</span>
-          <span className={styles.badgeSubtle}>DocDesk Portal</span>
+          <span className={styles.badgeSubtle}>
+            {isAdminMode ? 'Administrator Console' : 'DocDesk Portal'}
+          </span>
         </div>
         <Text as="h1" size="xl" weight="bold" className={styles.heading}>
-          Welcome back
+          {isAdminMode ? 'Administrator Sign In' : 'Welcome back'}
         </Text>
         <Text tone="textMuted" size="sm" className={styles.subtitle}>
-          Sign in with your institution email and the OTP from your admin.
+          {isAdminMode
+            ? 'Sign in with institutional admin credentials to access the console.'
+            : 'Sign in with your institution email and the OTP from your admin.'}
         </Text>
       </Stack>
 
-      <form onSubmit={onSubmit} noValidate aria-label="Sign in" className={styles.form}>
+      <form
+        onSubmit={onSubmit}
+        noValidate
+        aria-label="Sign in"
+        aria-busy={submitting}
+        aria-describedby={formError ? 'login-error-alert' : undefined}
+        className={styles.form}
+      >
         <Stack gap={4}>
           {formError && (
-            <Alert tone="danger" data-testid="login-error">
-              {formError}
+            <Alert tone="danger" data-testid="login-error" id="login-error-alert">
+              <Stack gap={1}>
+                <div>{formError.message}</div>
+                {formError.requestId && (
+                  <div className={styles.requestId} data-testid="login-error-request-id">
+                    Reference: {formError.requestId}
+                  </div>
+                )}
+                {formError.isRecoverable && (
+                  <button
+                    type="button"
+                    onClick={handleAuthenticate}
+                    className={styles.retryBtn}
+                    data-testid="login-retry-button"
+                  >
+                    Try Again
+                  </button>
+                )}
+              </Stack>
             </Alert>
           )}
 
@@ -134,6 +173,7 @@ export function LoginPage() {
             value={values.email}
             onChange={update('email')}
             error={errors.email}
+            disabled={submitting}
             data-testid="login-email"
           />
           <TextField
@@ -144,16 +184,17 @@ export function LoginPage() {
             value={values.otp}
             onChange={update('otp')}
             error={errors.otp}
+            disabled={submitting}
             data-testid="login-otp"
           />
           <Button
             type="submit"
             fullWidth
             loading={submitting}
-            disabled={rateLimitCountdown > 0}
+            disabled={rateLimitCountdown > 0 || submitting}
             data-testid="login-submit"
           >
-            {rateLimitCountdown > 0 ? `Wait ${rateLimitCountdown}s` : 'Sign in'}
+            {rateLimitCountdown > 0 ? `Wait ${rateLimitCountdown}s` : isAdminMode ? 'Sign in as Admin' : 'Sign in'}
           </Button>
 
           {rateLimitCountdown > 0 && (
@@ -161,6 +202,17 @@ export function LoginPage() {
               Rate limited: login requests will be unlocked in {rateLimitCountdown} seconds.
             </Text>
           )}
+
+          <div className={styles.modeToggleArea}>
+            <button
+              type="button"
+              onClick={toggleAdminMode}
+              className={styles.modeToggleBtn}
+              data-testid="toggle-admin-login"
+            >
+              {isAdminMode ? '← Sign in as student, faculty, or staff' : 'Sign in as Administrator →'}
+            </button>
+          </div>
         </Stack>
       </form>
     </Stack>
