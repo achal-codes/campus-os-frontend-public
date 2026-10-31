@@ -35,6 +35,29 @@ describe('Login', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email_id or OTP')
   })
 
+  it('shows mapped error when institution is unknown', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse(400, { error: { code: 'UNKNOWN_INSTITUTION', message: 'Unknown institution' } }),
+    ))
+    const { user } = renderRoute({ route: '/login' })
+    await user.type(screen.getByLabelText('Email'), 'outsider@gmail.com')
+    await user.type(screen.getByLabelText('OTP'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unknown institution')
+  })
+
+  it('handles rate limited response with countdown notice', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse(429, { error: { code: 'RATE_LIMITED', message: 'Too many requests' } }),
+    ))
+    const { user } = renderRoute({ route: '/login' })
+    await user.type(screen.getByLabelText('Email'), 'asha@team1.com')
+    await user.type(screen.getByLabelText('OTP'), '111111')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Too many login attempts')
+    expect(screen.getByRole('button', { name: /Wait \d+s/i })).toBeDisabled()
+  })
+
   it('signs in and returns to ?next', async () => {
     const fetchMock = vi.fn().mockResolvedValue(token('student', 'Asha Kumar', 'asha@team1.com'))
     vi.stubGlobal('fetch', fetchMock)
