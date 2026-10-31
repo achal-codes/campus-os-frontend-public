@@ -1,123 +1,140 @@
-/* DocDesk Wireframe Clean Theme Layer
- * Style mandate: keep the wireframes' plain, simple look
- * One accent colour (#4338ca), no gradients, no glass, no emoji icons.
+/* DocDesk Modern Glass & Layered Depth Design System
+ * Modern frosted glass, crisp lit-top highlights, refined typography, and subtle micro-interactions
  */
 
 :root {
   --accent: #4338ca;
   --accent-dark: #3730a3;
+  --accent-light: #6366f1;
   --ink: #0f172a;
   --muted: #64748b;
-  --line: #e2e8f0;
+  --line: rgba(226, 232, 240, 0.8);
   --bg: #ffffff;
   --bg-soft: #f8fafc;
   --danger: #dc2626;
-  --st-pending: #b45309;
-  --st-answered: #1d4ed8;
-  --st-acked: #15803d;
+  --st-pending: #d97706;
+  --st-answered: #2563eb;
+  --st-acked: #16a34a;
   --overdue: #dc2626;
 }
 
 .glassContainer {
   min-height: 100vh;
-  background-color: var(--bg);
-  color: var(--ink);
+  background-color: var(--color-bg, #f8fafc);
+  color: var(--color-text, #0f172a);
   display: flex;
   flex-direction: column;
 }
 
 :global([data-theme='dark']) .glassContainer {
-  background-color: #0f172a;
-  color: #f8fafc;
+  background-color: var(--color-bg, #0f172a);
+  color: var(--color-text, #f8fafc);
 }
 
-/* Plain Wireframe Panels & Surfaces (no blur, 1px border) */
+/* Elevated Glass Panels with Lit Top Border */
 .glassPanel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 12px;
   position: relative;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :global([data-theme='dark']) .glassPanel {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 8px 24px -4px rgba(0, 0, 0, 0.35);
 }
 
 .glassCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: none;
-  transition: border-color 0.15s ease;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9), 0 6px 20px -3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :global([data-theme='dark']) .glassCard {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 8px 28px -4px rgba(0, 0, 0, 0.4);
 }
 
 .glassCard:hover {
-  border-color: #cbd5e1;
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.95), 0 10px 28px -4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 :global([data-theme='dark']) .glassCard:hover {
-  border-color: #475569;
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 12px 32px -4px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
 }
 
-/* Plain Inputs & Controls */
+/* Polished Inputs & Controls */
 .glassInput,
 .glassSelect,
 .glassTextarea {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   color: #0f172a;
-  border-radius: 6px;
-  padding: 8px 12px;
+  border-radius: 8px;
+  padding: 9px 13px;
   font-size: 14px;
   line-height: 1.5;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 :global([data-theme='dark']) .glassInput,
 :global([data-theme='dark']) .glassSelect,
 :global([data-theme='dark']) .glassTextarea {
-  background: #1e293b;
-  border-color: #334155;
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.12);
   color: #f8fafc;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .glassInput:focus,
 .glassSelect:focus,
 .glassTextarea:focus {
   outline: none;
-  border-color: #4338ca;
-  box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.15);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 :global([data-theme='dark']) .glassInput:focus,
 :global([data-theme='dark']) .glassSelect:focus,
 :global([data-theme='dark']) .glassTextarea:focus {
   border-color: #818cf8;
-  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
 }
 
-/* Plain Tables (Muted header row, 1px dividers, row hover) */
+/* Glass Tables with Lit Headers */
 .glassTableContainer {
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
 }
 
 :global([data-theme='dark']) .glassTableContainer {
-  background: #1e293b;
-  border-color: #334155;
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 8px 24px -4px rgba(0, 0, 0, 0.35);
 }
 
 .glassTable {
@@ -127,29 +144,32 @@
 }
 
 .glassTable th {
-  padding: 12px 16px;
+  padding: 12px 18px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted, #64748b);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
   z-index: 2;
 }
 
 :global([data-theme='dark']) .glassTable th {
-  border-bottom: 1px solid #334155;
-  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.85);
   color: #94a3b8;
 }
 
 .tableLoadingOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,19 +178,19 @@
 }
 
 :global([data-theme='dark']) .tableLoadingOverlay {
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.75);
 }
 
 .glassTable td {
-  padding: 12px 16px;
+  padding: 14px 18px;
   font-size: 14px;
-  color: #0f172a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--color-text, #0f172a);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   transition: background-color 0.15s ease;
 }
 
 :global([data-theme='dark']) .glassTable td {
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: #f8fafc;
 }
 
@@ -179,11 +199,11 @@
 }
 
 .glassTable tbody tr:hover td {
-  background: #f8fafc;
+  background: rgba(99, 102, 241, 0.035);
 }
 
 :global([data-theme='dark']) .glassTable tbody tr:hover td {
-  background: #334155;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Accessibility: Reduced motion */
