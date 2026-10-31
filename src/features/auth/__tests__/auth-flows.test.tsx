@@ -32,8 +32,8 @@ describe('Login Page Presentation & Architecture (Part 1)', () => {
     expect(screen.queryByText(/Role-Enforced Security/i)).not.toBeInTheDocument()
   })
 
-  // 2. Exactly one H1, one form, one primary submit button
-  it('2. renders exactly one H1, one form, and one primary submit button', () => {
+  // 2. Exactly one H1, one form, one primary submit button, and "Enter OTP" label
+  it('2. renders exactly one H1, one form, one primary submit button, and Enter OTP label', () => {
     renderRoute({ route: '/login' })
 
     const h1s = screen.getAllByRole('heading', { level: 1 })
@@ -45,6 +45,11 @@ describe('Login Page Presentation & Architecture (Part 1)', () => {
 
     const submitButtons = screen.getAllByRole('button', { name: 'Sign in' })
     expect(submitButtons).toHaveLength(1)
+
+    // Asserts visible label is "Enter OTP"
+    const visibleOtpLabel = document.getElementById('login-password-label')
+    expect(visibleOtpLabel).toHaveTextContent('Enter OTP')
+    expect(screen.getByLabelText('Enter OTP')).toBeInTheDocument()
   })
 
   // 6. No "Sign in as Administrator / Faculty / Student" text or control renders on the login page

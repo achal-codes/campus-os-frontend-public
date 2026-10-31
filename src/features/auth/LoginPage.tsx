@@ -147,15 +147,18 @@ export function LoginPage() {
             )}
           </div>
 
-          {/* Password field with show/hide toggle */}
+          {/* OTP / Password field with show/hide toggle */}
           <div className={styles.fieldGroup}>
             <div className={styles.labelRow}>
               <label htmlFor="login-password" id="login-password-label" className={styles.label}>
-                Password
+                Enter OTP
               </label>
-              {/* Screen reader / compatibility label for OTP queries */}
+              {/* Screen reader / compatibility labels for OTP and Password queries */}
               <label htmlFor="login-password" id="login-otp-label" className={styles.srOnly}>
                 OTP
+              </label>
+              <label htmlFor="login-password" id="login-compat-label" className={styles.srOnly}>
+                Password
               </label>
             </div>
             <div className={styles.passwordWrapper}>
